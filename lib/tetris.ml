@@ -53,7 +53,7 @@ let piece_pos p =
   in
   let p_x, p_y = (p.position.x, p.position.y) in
   match p.rotation with
-  | R0 -> unrotated
+  | R0 -> List.map (fun { x; y } -> point (x + p_x) (y + p_y)) unrotated
   | R90 ->
       List.map
         (fun { x; y } -> point (piece_width - x + p_x) (y + p_y))
@@ -107,16 +107,11 @@ let space_open g (x, y) =
 (** [collides p g] is true if [p] has blocks overlapping with [g]'s well or
     boundaries *)
 let collides p g =
-  List.for_all
-    (fun { x; y } -> space_open g (x + p.position.x, y + p.position.y))
-    (piece_pos p)
+  List.for_all (fun { x; y } -> space_open g (x, y)) (piece_pos p)
 
 (** adds controlled piece to well and gives a new piece *)
 let add_to_well g =
-  let p = g.piece in
-  List.iter
-    (fun { x; y } -> g.well.(y + p.position.y).(x + p.position.x) <- true)
-    (piece_pos p);
+  List.iter (fun { x; y } -> g.well.(y).(x) <- true) (piece_pos g.piece);
   g.piece <-
     {
       piece_type = random_piece_type ();
@@ -143,8 +138,7 @@ let shift_right g n =
   if collides next_pos g then g.piece <- next_pos
 
 let get_entry g (x, y) =
-  space_open g (x, y)
+  (not @@ space_open g (x, y))
   || List.exists
-       (fun { x = p_x; y = p_y } ->
-         x = g.piece.position.x + p_x && y = g.piece.position.y + p_y)
+       (fun { x = p_x; y = p_y } -> x = p_x && y = p_y)
        (piece_pos g.piece)
