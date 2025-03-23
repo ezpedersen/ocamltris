@@ -1,0 +1,4 @@
+(executable
+ (public_name tetris)
+ (name main)
+ (libraries tetris unix))
