@@ -14,6 +14,11 @@ type rotation =
   | R180
   | R270
 
+type fpoint = {
+  fx: float;
+  fy : float;
+}
+let fpoint fx fy = {fx; fy;}
 (** Tetris pieces *)
 type piece_type =
   | O
@@ -27,46 +32,37 @@ type piece_type =
 type piece = {
   piece_type : piece_type;
   mutable rotation : rotation;
-  position : point;
-      (* position of "top left" of piece, see https://shorturl.at/GEqmK *)
+  position : fpoint;
+  (* position of "fpoint" of piece, see https://shorturl.at/GEqmK *)
 }
 (** represents a piece being controlled (one in the well its just blocks) *)
 
+(*https://gamedev.stackexchange.com/questions/208367/how-is-rotation-defined-in-a-tetris-game*)
+
 (** given a piece type, [piece_geometry t] is the points a piece takes up
     relative to its position *)
-let piece_geometry = function
-  | O -> [ point 0 0; point 1 0; point 0 1; point 1 1 ]
-  | I -> [ point 0 1; point 1 1; point 2 1; point 3 1 ]
-  | S -> [ point 1 0; point 2 0; point 0 1; point 1 1 ]
-  | Z -> [ point 0 0; point 1 0; point 1 1; point 2 1 ]
-  | L -> [ point 2 0; point 0 1; point 1 1; point 2 1 ]
-  | J -> [ point 0 0; point 0 1; point 1 1; point 2 1 ]
-  | T -> [ point 1 0; point 0 1; point 1 1; point 2 1 ]
+let base_geometry = function
+  | I -> [ fpoint 0.5 0.5;fpoint 1.5 0.5;fpoint (-1.5) 0.5; fpoint (-0.5) 0.5 ]
+  | J -> [ fpoint 0. 0.; fpoint 1. 0.; fpoint (-1.) 0.; fpoint (-1.) 1. ]
+  | L -> [ fpoint 0. 0.; fpoint 1. 0.; fpoint (-1.) 0.; fpoint (-1.) 1. ]
+  | O -> [ fpoint 0.5 0.5; fpoint 0.5 (-0.5); fpoint (-0.5) 0.5; fpoint (-0.5) (-0.5) ]
+  | S -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint 1. 1.; fpoint 0. (-1.) ]
+  | T -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint 1. 0.; fpoint (-1.)  0.]
+  | Z -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint (-1.) 1.; fpoint 1. 0. ]
+let rotate_point_90 offset = fpoint (offset.fy) (-. offset.fx )
+let rotated_geometry p = 
+  let rotation_function = function
+  | R0 -> Fun.id 
+  | R90 -> rotate_point_90 
+  | R180 -> (fun x -> rotate_point_90 x |> rotate_point_90 )
+  | R270 -> (fun x -> rotate_point_90 x |> rotate_point_90 |> rotate_point_90 )
+  in 
 
-let piece_pos p =
-  let unrotated = piece_geometry p.piece_type in
-  let piece_width =
-    match p.piece_type with
-    | O -> 2
-    | I -> 4
-    | _ -> 3
-  in
-  let p_x, p_y = (p.position.x, p.position.y) in
-  match p.rotation with
-  | R0 -> List.map (fun { x; y } -> point (x + p_x) (y + p_y)) unrotated
-  | R90 ->
-      List.map
-        (fun { x; y } -> point (piece_width - x + p_x) (y + p_y))
-        unrotated
-  | R180 ->
-      List.map
-        (fun { x; y } -> point (piece_width - x + p_x) (piece_width - y + p_y))
-        unrotated
-  | R270 ->
-      List.map
-        (fun { x; y } -> point (x + p_x) (piece_width - y + p_y))
-        unrotated
+    List.map (rotation_function p.rotation) (base_geometry p.piece_type)
+let point_of_fpoint a = point (int_of_float a.fx) (int_of_float a.fy)
+let piece_geometry p = List.map ((fun x -> {fx=p.position.fx +. x.fx; fy=p.position.fy +. x.fy } |> point_of_fpoint ) ) (rotated_geometry p)
 
+let piece_pos = piece_geometry
 type t = {
   score : int;
   well : bool array array;
@@ -94,7 +90,7 @@ let create (cols, rows) =
     {
       piece_type = random_piece_type ();
       rotation = R0;
-      position = { x = cols / 2; y = 0 };
+      position = { fx = 2.; fy = 0. };
     }
   in
   { score = 0; well; cols; rows; piece }
@@ -106,7 +102,7 @@ let space_open g (x, y) =
 
 (** [collides p g] is true if [p] has blocks overlapping with [g]'s well or
     boundaries *)
-let collides p g =
+let collides (p: piece) g =
   List.for_all (fun { x; y } -> space_open g (x, y)) (piece_pos p)
 
 (** adds controlled piece to well and gives a new piece *)
@@ -116,14 +112,14 @@ let add_to_well g =
     {
       piece_type = random_piece_type ();
       rotation = R0;
-      position = { x = g.cols / 2; y = 0 };
+      position = { fx = float_of_int (g.cols) /. 2.; fy = 0. };
     }
 
 let tick g =
   let next_pos =
     {
       g.piece with
-      position = { g.piece.position with y = g.piece.position.y + 1 };
+      position = { g.piece.position with fy = g.piece.position.fy +. 1. };
     }
   in
   if collides next_pos g then g.piece <- next_pos else add_to_well g
@@ -132,7 +128,7 @@ let shift_right g n =
   let next_pos =
     {
       g.piece with
-      position = { g.piece.position with x = g.piece.position.x + n };
+      position = { g.piece.position with fx = g.piece.position.fx +. float_of_int n };
     }
   in
   if collides next_pos g then g.piece <- next_pos
