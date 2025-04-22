@@ -7,13 +7,6 @@ type point = {
 (** helper function for creating points *)
 let point x y = { x; y }
 
-(** degrees rotated clockwise *)
-type rotation =
-  | R0
-  | R90
-  | R180
-  | R270
-
 type fpoint = {
   fx : float;
   fy : float;
@@ -32,7 +25,7 @@ type piece_type =
 
 type piece = {
   piece_type : piece_type;
-  mutable rotation : rotation;
+  rotation : int ref;
   position : fpoint;
       (* position of "fpoint" of piece, see https://shorturl.at/GEqmK *)
 }
@@ -61,14 +54,10 @@ let base_geometry = function
 let rotate_point_90 offset = fpoint offset.fy (-.offset.fx)
 
 let rotated_geometry p =
-  let rotation_function = function
-    | R0 -> Fun.id
-    | R90 -> rotate_point_90
-    | R180 -> fun x -> rotate_point_90 x |> rotate_point_90
-    | R270 -> fun x -> rotate_point_90 x |> rotate_point_90 |> rotate_point_90
+  let rec rotation_function n x =
+    if n = 0 then x else rotate_point_90 x |> rotation_function (n - 1)
   in
-
-  List.map (rotation_function p.rotation) (base_geometry p.piece_type)
+  List.map (rotation_function !(p.rotation)) (base_geometry p.piece_type)
 
 let point_of_fpoint a = point (int_of_float a.fx) (int_of_float a.fy)
 
@@ -107,7 +96,7 @@ let create (cols, rows) =
   let piece =
     {
       piece_type = random_piece_type ();
-      rotation = R0;
+      rotation = ref 0;
       position = { fx = 2.; fy = 0. };
     }
   in
@@ -129,7 +118,7 @@ let add_to_well g =
   g.piece <-
     {
       piece_type = random_piece_type ();
-      rotation = R0;
+      rotation = ref 0;
       position = { fx = float_of_int g.cols /. 2.; fy = 0. };
     }
 
@@ -152,21 +141,12 @@ let shift_right g n =
   in
   if collides next_pos g then g.piece <- next_pos
 
-let rotate_cw g =
-  g.piece.rotation <-
-    (match g.piece.rotation with
-    | R0 -> R90
-    | R90 -> R180
-    | R180 -> R270
-    | R270 -> R0)
+let rotate_cw g = g.piece.rotation := (!(g.piece.rotation) + 1) mod 4
 
 let rotate_ccw g =
-  g.piece.rotation <-
-    (match g.piece.rotation with
-    | R0 -> R270
-    | R90 -> R0
-    | R180 -> R90
-    | R270 -> R180)
+  g.piece.rotation :=
+    let new_rot = !(g.piece.rotation) - 1 in
+    if new_rot < 0 then 3 else new_rot
 
 let get_entry g (x, y) =
   (not @@ space_open g (x, y))
