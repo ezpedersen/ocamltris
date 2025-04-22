@@ -15,11 +15,12 @@ type rotation =
   | R270
 
 type fpoint = {
-  fx: float;
+  fx : float;
   fy : float;
 }
-let fpoint fx fy = {fx; fy;}
-(** Tetris pieces *)
+
+let fpoint fx fy = { fx; fy }
+
 type piece_type =
   | O
   | I
@@ -33,7 +34,7 @@ type piece = {
   piece_type : piece_type;
   mutable rotation : rotation;
   position : fpoint;
-  (* position of "fpoint" of piece, see https://shorturl.at/GEqmK *)
+      (* position of "fpoint" of piece, see https://shorturl.at/GEqmK *)
 }
 (** represents a piece being controlled (one in the well its just blocks) *)
 
@@ -42,27 +43,44 @@ type piece = {
 (** given a piece type, [piece_geometry t] is the points a piece takes up
     relative to its position *)
 let base_geometry = function
-  | I -> [ fpoint 0.5 0.5;fpoint 1.5 0.5;fpoint (-1.5) 0.5; fpoint (-0.5) 0.5 ]
+  | I ->
+      [ fpoint 0.5 0.5; fpoint 1.5 0.5; fpoint (-1.5) 0.5; fpoint (-0.5) 0.5 ]
   | J -> [ fpoint 0. 0.; fpoint 1. 0.; fpoint (-1.) 0.; fpoint (-1.) 1. ]
   | L -> [ fpoint 0. 0.; fpoint 1. 0.; fpoint (-1.) 0.; fpoint (-1.) 1. ]
-  | O -> [ fpoint 0.5 0.5; fpoint 0.5 (-0.5); fpoint (-0.5) 0.5; fpoint (-0.5) (-0.5) ]
+  | O ->
+      [
+        fpoint 0.5 0.5;
+        fpoint 0.5 (-0.5);
+        fpoint (-0.5) 0.5;
+        fpoint (-0.5) (-0.5);
+      ]
   | S -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint 1. 1.; fpoint 0. (-1.) ]
-  | T -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint 1. 0.; fpoint (-1.)  0.]
+  | T -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint 1. 0.; fpoint (-1.) 0. ]
   | Z -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint (-1.) 1.; fpoint 1. 0. ]
-let rotate_point_90 offset = fpoint (offset.fy) (-. offset.fx )
-let rotated_geometry p = 
-  let rotation_function = function
-  | R0 -> Fun.id 
-  | R90 -> rotate_point_90 
-  | R180 -> (fun x -> rotate_point_90 x |> rotate_point_90 )
-  | R270 -> (fun x -> rotate_point_90 x |> rotate_point_90 |> rotate_point_90 )
-  in 
 
-    List.map (rotation_function p.rotation) (base_geometry p.piece_type)
+let rotate_point_90 offset = fpoint offset.fy (-.offset.fx)
+
+let rotated_geometry p =
+  let rotation_function = function
+    | R0 -> Fun.id
+    | R90 -> rotate_point_90
+    | R180 -> fun x -> rotate_point_90 x |> rotate_point_90
+    | R270 -> fun x -> rotate_point_90 x |> rotate_point_90 |> rotate_point_90
+  in
+
+  List.map (rotation_function p.rotation) (base_geometry p.piece_type)
+
 let point_of_fpoint a = point (int_of_float a.fx) (int_of_float a.fy)
-let piece_geometry p = List.map ((fun x -> {fx=p.position.fx +. x.fx; fy=p.position.fy +. x.fy } |> point_of_fpoint ) ) (rotated_geometry p)
+
+let piece_geometry p =
+  List.map
+    (fun x ->
+      { fx = p.position.fx +. x.fx; fy = p.position.fy +. x.fy }
+      |> point_of_fpoint)
+    (rotated_geometry p)
 
 let piece_pos = piece_geometry
+
 type t = {
   score : int;
   well : bool array array;
@@ -102,7 +120,7 @@ let space_open g (x, y) =
 
 (** [collides p g] is true if [p] has blocks overlapping with [g]'s well or
     boundaries *)
-let collides (p: piece) g =
+let collides (p : piece) g =
   List.for_all (fun { x; y } -> space_open g (x, y)) (piece_pos p)
 
 (** adds controlled piece to well and gives a new piece *)
@@ -112,7 +130,7 @@ let add_to_well g =
     {
       piece_type = random_piece_type ();
       rotation = R0;
-      position = { fx = float_of_int (g.cols) /. 2.; fy = 0. };
+      position = { fx = float_of_int g.cols /. 2.; fy = 0. };
     }
 
 let tick g =
@@ -128,7 +146,8 @@ let shift_right g n =
   let next_pos =
     {
       g.piece with
-      position = { g.piece.position with fx = g.piece.position.fx +. float_of_int n };
+      position =
+        { g.piece.position with fx = g.piece.position.fx +. float_of_int n };
     }
   in
   if collides next_pos g then g.piece <- next_pos

@@ -1,11 +1,11 @@
-(** changes terminal to raw mode, make sure to disable after use *)
+(* changes terminal to raw mode, make sure to disable after use *)
 let enable_raw_mode () =
   let open Unix in
   let termios = tcgetattr stdin in
   let raw = { termios with c_icanon = false; c_echo = false } in
   tcsetattr stdin TCSANOW raw
 
-(** changes terminal from raw to cooked mode *)
+(* changes terminal from raw to cooked mode *)
 let disable_raw_mode termios =
   let open Unix in
   tcsetattr stdin TCSANOW termios
