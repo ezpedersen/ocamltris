@@ -21,6 +21,8 @@ let () =
       if char = 'q' then raise Exit;
       if char = 'h' then Tetris.shift_right game (-1);
       if char = 'l' then Tetris.shift_right game 1;
+      if char = 'a' then Tetris.rotate_ccw game;
+      if char = 'd' then Tetris.rotate_cw game;
       if char = 'j' then Tetris.tick game;
       (* temp until I put a timer in *)
       for i = 0 to 50 do

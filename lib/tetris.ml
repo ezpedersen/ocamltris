@@ -26,7 +26,7 @@ type piece_type =
 
 type piece = {
   piece_type : piece_type;
-  rotation : rotation;
+  mutable rotation : rotation;
   position : point;
       (* position of "top left" of piece, see https://shorturl.at/GEqmK *)
 }
@@ -136,6 +136,22 @@ let shift_right g n =
     }
   in
   if collides next_pos g then g.piece <- next_pos
+
+let rotate_cw g =
+  g.piece.rotation <-
+    (match g.piece.rotation with
+    | R0 -> R90
+    | R90 -> R180
+    | R180 -> R270
+    | R270 -> R0)
+
+let rotate_ccw g =
+  g.piece.rotation <-
+    (match g.piece.rotation with
+    | R0 -> R270
+    | R90 -> R0
+    | R180 -> R90
+    | R270 -> R180)
 
 let get_entry g (x, y) =
   (not @@ space_open g (x, y))

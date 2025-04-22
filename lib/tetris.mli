@@ -8,3 +8,6 @@ val tick : t -> unit
 val shift_right : t -> int -> unit
 (** [get_entry b (x, y)] is true if a block exists at [(x, y)] in [b] *)
 val get_entry : t -> int * int -> bool
+
+val rotate_ccw : t -> unit
+val rotate_cw : t -> unit
