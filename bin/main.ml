@@ -1,3 +1,5 @@
+open Lwt.Infix
+
 (* changes terminal to raw mode, make sure to disable after use *)
 let enable_raw_mode () =
   let open Unix in
@@ -11,7 +13,7 @@ let disable_raw_mode termios =
   tcsetattr stdin TCSANOW termios
 
 let render game =
-  for i = 0 to 50 do
+  for x = 0 to 50 do
     print_newline ()
   done;
   for i = 0 to 19 do
@@ -21,30 +23,50 @@ let render game =
     print_newline ()
   done
 
-let handle_input game =
-  let char = input_char stdin in
-  if char = 'q' then raise Exit;
-  if char = 'h' then Tetris.shift_right game (-1);
-  if char = 'l' then Tetris.shift_right game 1;
-  if char = 'a' then Tetris.rotate_ccw game;
-  if char = 'd' then Tetris.rotate_cw game;
-  if char = 'j' then Tetris.tick game
+let rec input_loop game =
+  Lwt_io.read_char Lwt_io.stdin >>= function
+  | 'q' -> Lwt.fail Exit
+  | 'h' ->
+      Tetris.shift_right game (-1);
+      render game;
+      input_loop game
+  | 'l' ->
+      Tetris.shift_right game 1;
+      render game;
+      input_loop game
+  | 'a' ->
+      Tetris.rotate_ccw game;
+      render game;
+      input_loop game
+  | 'd' ->
+      Tetris.rotate_cw game;
+      render game;
+      input_loop game
+  | 'j' ->
+      Tetris.tick game;
+      render game;
+      input_loop game
+  | _ -> input_loop game
 
-let game_loop game =
+let rec render_loop game =
+  Lwt_unix.sleep 1.0 >>= fun () ->
   Tetris.tick game;
-  handle_input game;
   render game;
-  ()
+  render_loop game
 
 let () =
   let original_termios = Unix.tcgetattr Unix.stdin in
   enable_raw_mode ();
   print_endline "Raw mode enabled. Press 'q' to quit.";
   let game = Tetris.create (10, 20) in
-  try
-    while true do
-      game_loop game
-    done
-  with Exit ->
-    disable_raw_mode original_termios;
-    print_endline "Raw mode disabled."
+  Lwt_main.run
+    (Lwt.catch
+       (fun () -> Lwt.pick [ render_loop game; input_loop game ])
+       (function
+         | exn ->
+         disable_raw_mode original_termios;
+         print_endline (Printexc.to_string exn);
+         Lwt.return_unit))
+(* with Exit -> *)
+(*   disable_raw_mode original_termios; *)
+(*   print_endline "Raw mode disabled." *)
