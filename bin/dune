@@ -1,4 +1,6 @@
 (executable
  (public_name tetris)
  (name main)
- (libraries tetris unix))
+ (libraries tetris unix lwt.unix)
+ (preprocess (pps lwt_ppx)))
+
