@@ -2,9 +2,9 @@ type point = {
   x : int;
   y : int;
 }
-(** respresents a point in 2D space *)
+(* respresents a point in 2D space *)
 
-(** helper function for creating points *)
+(* helper function for creating points *)
 let point x y = { x; y }
 
 type fpoint = {
@@ -29,12 +29,12 @@ type piece = {
   position : fpoint;
       (* position of "fpoint" of piece, see https://shorturl.at/GEqmK *)
 }
-(** represents a piece being controlled (one in the well its just blocks) *)
+(* represents a piece being controlled (one in the well its just blocks) *)
 
 (*https://gamedev.stackexchange.com/questions/208367/how-is-rotation-defined-in-a-tetris-game*)
 
-(** given a piece type, [piece_geometry t] is the points a piece takes up
-    relative to its position *)
+(* given a piece type, [piece_geometry t] is the points a piece takes up
+   relative to its position *)
 let base_geometry = function
   | I ->
       [ fpoint 0.5 0.5; fpoint 1.5 0.5; fpoint (-1.5) 0.5; fpoint (-0.5) 0.5 ]
@@ -102,17 +102,33 @@ let create (cols, rows) =
   in
   { score = 0; well; cols; rows; piece }
 
-(** [true] if a block can be placed in [g]'s well at [(x, y)] *)
+(* [true] if a block can be placed in [g]'s well at [(x, y)] *)
 let space_open g (x, y) =
   if x >= g.cols || x < 0 || y >= g.rows || y < 0 then false
   else not g.well.(y).(x)
 
-(** [collides p g] is true if [p] has blocks overlapping with [g]'s well or
-    boundaries *)
+(* [collides p g] is true if [p] has blocks overlapping with [g]'s well or
+   boundaries *)
 let collides (p : piece) g =
   List.for_all (fun { x; y } -> space_open g (x, y)) (piece_pos p)
 
-(** adds controlled piece to well and gives a new piece *)
+let clear_lines g =
+  let row_full row = Array.for_all (fun x -> x) row in
+
+  let new_rows =
+    Array.fold_right
+      (fun row acc -> if row_full row then acc else row :: acc)
+      g.well []
+  in
+  let num_cleared = g.rows - List.length new_rows in
+  for x = 0 to num_cleared - 1 do
+    g.well.(x) <- Array.make g.cols false
+  done;
+  for x = 0 to List.length new_rows - 1 do
+    g.well.(x + num_cleared) <- List.nth new_rows x
+  done
+
+(* adds controlled piece to well and gives a new piece *)
 let add_to_well g =
   List.iter (fun { x; y } -> g.well.(y).(x) <- true) (piece_pos g.piece);
   g.piece <-
@@ -120,7 +136,8 @@ let add_to_well g =
       piece_type = random_piece_type ();
       rotation = ref 0;
       position = { fx = float_of_int g.cols /. 2.; fy = 0. };
-    }
+    };
+  clear_lines g
 
 let tick g =
   let next_pos =
