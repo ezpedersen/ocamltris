@@ -139,36 +139,39 @@ let add_to_well g =
     };
   clear_lines g
 
+let next_pos p x y =
+  { p with position = { fx = p.position.fx +. x; fy = p.position.fy +. y } }
+
 let tick g =
-  let next_pos =
-    {
-      g.piece with
-      position = { g.piece.position with fy = g.piece.position.fy +. 1. };
-    }
-  in
-  if ok_place next_pos g then
-    let () = g.piece <- next_pos in
+  let np = next_pos g.piece 0. 1. in
+  if ok_place np g then
+    let () = g.piece <- np in
     false
   else
     let () = add_to_well g in
     true
 
 let shift_right g n =
-  let next_pos =
-    {
-      g.piece with
-      position =
-        { g.piece.position with fx = g.piece.position.fx +. float_of_int n };
-    }
-  in
-  if ok_place next_pos g then g.piece <- next_pos
+  let n = float_of_int n in
+  let np = next_pos g.piece n 0. in
+  if ok_place np g then g.piece <- np
 
-let rotate_ccw g = g.piece.rotation := (!(g.piece.rotation) + 1) mod 4
+let rotate g n =
+  let old_rot = !(g.piece.rotation) in
+  let new_rot = !(g.piece.rotation) + n in
+  let new_rot = if new_rot < 0 then 3 else if new_rot = 4 then 0 else new_rot in
+  g.piece.rotation := new_rot;
+  if ok_place g.piece g then ()
+  else
+    let np = next_pos g.piece 1. 0. in
+    if ok_place np g then g.piece <- np
+    else
+      let np = next_pos g.piece (-1.) 0. in
+      if ok_place np g then g.piece <- np else g.piece.rotation := old_rot;
+      ()
 
-let rotate_cw g =
-  g.piece.rotation :=
-    let new_rot = !(g.piece.rotation) - 1 in
-    if new_rot < 0 then 3 else new_rot
+let rotate_ccw g = rotate g 1
+let rotate_cw g = rotate g (-1)
 
 let get_entry g (x, y) =
   (not @@ space_open g (x, y))
