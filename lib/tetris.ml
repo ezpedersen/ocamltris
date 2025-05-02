@@ -59,7 +59,8 @@ let rotated_geometry p =
   in
   List.map (rotation_function !(p.rotation)) (base_geometry p.piece_type)
 
-let point_of_fpoint a = point (int_of_float a.fx) (int_of_float a.fy)
+let point_of_fpoint a =
+  point (int_of_float (floor a.fx)) (a.fy |> floor |> int_of_float)
 
 let piece_geometry p =
   List.map
