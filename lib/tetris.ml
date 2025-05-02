@@ -79,6 +79,7 @@ type t = {
   cols : int;
   mutable held : piece_type option;
   mutable piece : piece;
+  mutable switched : bool;
 }
 
 let random_piece_type () =
@@ -144,6 +145,7 @@ let create_piece pt cols =
 (* [add_to_well g] adds the piece to the well and gives a new piece *)
 (* adds controlled piece to well and gives a new piece *)
 let add_to_well g =
+  g.switched <- false;
   List.iter (fun { x; y } -> g.well.(y).(x) <- true) (piece_pos g.piece);
   let pt = random_piece_type () in
   clear_lines g;
@@ -211,15 +213,17 @@ let create (cols, rows) =
   let well = Array.init rows (fun _ -> Array.init cols (fun _ -> false)) in
   let pt = random_piece_type () in
   let piece = create_piece pt cols in
-  { score = ref 0; well; cols; rows; piece; held = None }
+  { score = ref 0; well; cols; rows; piece; held = None; switched = false }
 
 let hold g =
-  let temp = g.piece.piece_type in
-  if g.held = None then
-    let pt = random_piece_type () in
-    g.piece <- create_piece pt g.cols
-  else g.piece <- create_piece (Option.get g.held) g.cols;
-  g.held <- Some temp
+  if not g.switched then (
+    let temp = g.piece.piece_type in
+    if g.held = None then
+      let pt = random_piece_type () in
+      g.piece <- create_piece pt g.cols
+    else g.piece <- create_piece (Option.get g.held) g.cols;
+    g.held <- Some temp;
+    g.switched <- true)
 
 let hard_drop g =
   g.piece <- calculate_shadow g;
