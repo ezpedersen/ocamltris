@@ -92,17 +92,6 @@ let random_piece_type () =
   | 6 -> T
   | _ -> failwith "unreachable"
 
-let create (cols, rows) =
-  let well = Array.init rows (fun _ -> Array.init cols (fun _ -> false)) in
-  let piece =
-    {
-      piece_type = random_piece_type ();
-      rotation = ref 0;
-      position = { fx = 2.; fy = 0. };
-    }
-  in
-  { score = 0; well; cols; rows; piece }
-
 (* [true] if a block can be placed in [g]'s well at [(x, y)] *)
 let space_open g (x, y) =
   if x >= g.cols || x < 0 || y >= g.rows || y < 0 then false
@@ -174,8 +163,40 @@ let rotate g n =
 let rotate_ccw g = rotate g 1
 let rotate_cw g = rotate g (-1)
 
+let calculate_shadow g =
+  let np = ref (next_pos g.piece 0. 1.) in
+  let good = ref g.piece in
+  while ok_place !np g do
+    good := !np;
+    np := next_pos !np 0. 1.
+  done;
+  !good
+
 let get_entry g (x, y) =
-  (not @@ space_open g (x, y))
-  || List.exists
-       (fun { x = p_x; y = p_y } -> x = p_x && y = p_y)
-       (piece_pos g.piece)
+  if
+    (not @@ space_open g (x, y))
+    || List.exists
+         (fun { x = p_x; y = p_y } -> x = p_x && y = p_y)
+         (piece_pos g.piece)
+  then 1
+  else if
+    List.exists
+      (fun { x = p_x; y = p_y } -> x = p_x && y = p_y)
+      (piece_pos @@ calculate_shadow g)
+  then 2
+  else 0
+
+let create (cols, rows) =
+  let well = Array.init rows (fun _ -> Array.init cols (fun _ -> false)) in
+  let piece =
+    {
+      piece_type = random_piece_type ();
+      rotation = ref 0;
+      position = { fx = 2.; fy = 0. };
+    }
+  in
+  { score = 0; well; cols; rows; piece }
+
+let hard_drop g =
+  g.piece <- calculate_shadow g;
+  add_to_well g

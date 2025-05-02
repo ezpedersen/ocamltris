@@ -7,7 +7,9 @@ val tick : t -> bool
 (** shifts the selected block [n] units right and returns true if block was placed *)
 val shift_right : t -> int -> unit
 (** [get_entry b (x, y)] is true if a block exists at [(x, y)] in [b] *)
-val get_entry : t -> int * int -> bool
+val get_entry : t -> int * int -> int
+(** hards drops the piece *)
+val hard_drop : t -> unit
 
 (** rotates the piece counterclockwise *)
 val rotate_ccw : t -> unit

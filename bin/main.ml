@@ -18,7 +18,12 @@ let render game =
   done;
   for i = 0 to 19 do
     for j = 0 to 9 do
-      print_string (if Tetris.get_entry game (j, i) then "#" else ".")
+      print_string
+        (match Tetris.get_entry game (j, i) with
+        | 0 -> "."
+        | 1 -> "#"
+        | 2 -> "!"
+        | _ -> failwith "unreachable")
     done;
     print_newline ()
   done
@@ -47,9 +52,7 @@ let rec input_loop game =
       render game;
       input_loop game
   | ' ' ->
-      while not (Tetris.tick game) do
-        ()
-      done;
+      Tetris.hard_drop game;
       render game;
       input_loop game
   | _ -> input_loop game
