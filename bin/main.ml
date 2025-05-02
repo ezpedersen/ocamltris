@@ -47,6 +47,10 @@ let rec input_loop game =
       Tetris.rotate_cw game;
       render game;
       input_loop game
+  | 'k' ->
+      Tetris.rotate_cw game;
+      render game;
+      input_loop game
   | 'j' ->
       Tetris.tick game |> ignore;
       render game;
