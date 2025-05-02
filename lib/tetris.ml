@@ -107,9 +107,9 @@ let space_open g (x, y) =
   if x >= g.cols || x < 0 || y >= g.rows || y < 0 then false
   else not g.well.(y).(x)
 
-(* [collides p g] is true if [p] has blocks overlapping with [g]'s well or
+(* [ok_place p g] is true if [p] has blocks overlapping with [g]'s well or
    boundaries *)
-let collides (p : piece) g =
+let ok_place (p : piece) g =
   List.for_all (fun { x; y } -> space_open g (x, y)) (piece_pos p)
 
 let clear_lines g =
@@ -146,7 +146,7 @@ let tick g =
       position = { g.piece.position with fy = g.piece.position.fy +. 1. };
     }
   in
-  if collides next_pos g then g.piece <- next_pos else add_to_well g
+  if ok_place next_pos g then g.piece <- next_pos else add_to_well g
 
 let shift_right g n =
   let next_pos =
@@ -156,11 +156,11 @@ let shift_right g n =
         { g.piece.position with fx = g.piece.position.fx +. float_of_int n };
     }
   in
-  if collides next_pos g then g.piece <- next_pos
+  if ok_place next_pos g then g.piece <- next_pos
 
-let rotate_cw g = g.piece.rotation := (!(g.piece.rotation) + 1) mod 4
+let rotate_ccw g = g.piece.rotation := (!(g.piece.rotation) + 1) mod 4
 
-let rotate_ccw g =
+let rotate_cw g =
   g.piece.rotation :=
     let new_rot = !(g.piece.rotation) - 1 in
     if new_rot < 0 then 3 else new_rot
