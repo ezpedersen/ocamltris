@@ -16,6 +16,8 @@ let render game =
   for x = 0 to 50 do
     print_newline ()
   done;
+  Printf.fprintf stdout "Score: %d | Held: %s \n" (Tetris.get_score game)
+    (Tetris.get_held game);
   for i = 0 to 19 do
     for j = 0 to 9 do
       print_string
@@ -29,37 +31,38 @@ let render game =
   done
 
 let rec input_loop game =
+  let after =
+   fun () ->
+    render game;
+    input_loop game
+  in
   Lwt_io.read_char Lwt_io.stdin >>= function
   | 'q' -> Lwt.fail Exit
   | 'h' ->
       Tetris.shift_right game (-1);
-      render game;
-      input_loop game
+      after ()
   | 'l' ->
       Tetris.shift_right game 1;
-      render game;
-      input_loop game
+      after ()
   | 'a' ->
       Tetris.rotate_ccw game;
-      render game;
-      input_loop game
+      after ()
   | 'd' ->
       Tetris.rotate_cw game;
-      render game;
-      input_loop game
+      after ()
+  | 's' ->
+      Tetris.hold game;
+      after ()
   | 'k' ->
       Tetris.rotate_cw game;
-      render game;
-      input_loop game
+      after ()
   | 'j' ->
       Tetris.tick game |> ignore;
-      render game;
-      input_loop game
+      after ()
   | ' ' ->
       Tetris.hard_drop game;
-      render game;
-      input_loop game
-  | _ -> input_loop game
+      after ()
+  | _ -> after ()
 
 let rec render_loop game =
   Lwt_unix.sleep 1.0 >>= fun () ->

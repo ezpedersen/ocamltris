@@ -72,11 +72,12 @@ let piece_geometry p =
 let piece_pos = piece_geometry
 
 type t = {
-  score : int;
+  score : int ref;
   well : bool array array;
       (* TODO: change to color or something so it looks better*)
   rows : int;
   cols : int;
+  mutable held : piece_type option;
   mutable piece : piece;
 }
 
@@ -116,20 +117,37 @@ let clear_lines g =
   done;
   for x = 0 to List.length new_rows - 1 do
     g.well.(x + num_cleared) <- List.nth new_rows x
-  done
+  done;
+  incr g.score
 
+let get_score g = !(g.score)
+
+let get_held g =
+  match g.held with
+  | Some O -> "O"
+  | Some I -> "I"
+  | Some S -> "S"
+  | Some Z -> "Z"
+  | Some L -> "L"
+  | Some J -> "J"
+  | Some T -> "T"
+  | None -> "[]"
+
+let create_piece pt cols =
+  {
+    piece_type = pt;
+    rotation = ref 0;
+    position =
+      { fx = float_of_int cols /. 2.; fy = (if pt = O then 1. else 0.) };
+  }
+
+(* [add_to_well g] adds the piece to the well and gives a new piece *)
 (* adds controlled piece to well and gives a new piece *)
 let add_to_well g =
   List.iter (fun { x; y } -> g.well.(y).(x) <- true) (piece_pos g.piece);
   let pt = random_piece_type () in
   clear_lines g;
-  g.piece <-
-    {
-      piece_type = pt;
-      rotation = ref 0;
-      position =
-        { fx = float_of_int g.cols /. 2.; fy = (if pt = O then 1. else 0.) };
-    };
+  g.piece <- create_piece pt g.cols;
   if not @@ ok_place g.piece g then failwith "Game over!"
 
 let next_pos p x y =
@@ -192,15 +210,16 @@ let get_entry g (x, y) =
 let create (cols, rows) =
   let well = Array.init rows (fun _ -> Array.init cols (fun _ -> false)) in
   let pt = random_piece_type () in
-  let piece =
-    {
-      piece_type = pt;
-      rotation = ref 0;
-      position =
-        { fx = float_of_int cols /. 2.; fy = (if pt = O then 1. else 0.) };
-    }
-  in
-  { score = 0; well; cols; rows; piece }
+  let piece = create_piece pt cols in
+  { score = ref 0; well; cols; rows; piece; held = None }
+
+let hold g =
+  let temp = g.piece.piece_type in
+  if g.held = None then
+    let pt = random_piece_type () in
+    g.piece <- create_piece pt g.cols
+  else g.piece <- create_piece (Option.get g.held) g.cols;
+  g.held <- Some temp
 
 let hard_drop g =
   g.piece <- calculate_shadow g;

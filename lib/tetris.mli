@@ -15,3 +15,10 @@ val hard_drop : t -> unit
 val rotate_ccw : t -> unit
 (** rotates the piece clockwise *)
 val rotate_cw : t -> unit
+
+(** returns score *)
+val get_score : t -> int
+(** returns held piece as string *)
+val get_held : t -> string
+(** holds a piece *)
+val hold : t -> unit
