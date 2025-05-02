@@ -48,7 +48,7 @@ let base_geometry = function
         fpoint (-0.5) 0.5;
         fpoint (-0.5) (-0.5);
       ]
-  | T -> [ fpoint 0. 0.; fpoint 0. (-1.); fpoint 1. 0.; fpoint (-1.) 0. ]
+  | T -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint 1. 1.; fpoint (-1.) 1. ]
   | S -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint (-1.) 1.; fpoint 1. 0. ]
 
 let rotate_point_90 offset = fpoint offset.fy (-.offset.fx)
@@ -119,7 +119,7 @@ let clear_lines g =
   for x = 0 to List.length new_rows - 1 do
     g.well.(x + num_cleared) <- List.nth new_rows x
   done;
-  incr g.score
+  g.score := !(g.score) + (num_cleared * num_cleared)
 
 let get_score g = !(g.score)
 
@@ -139,7 +139,10 @@ let create_piece pt cols =
     piece_type = pt;
     rotation = ref 0;
     position =
-      { fx = float_of_int cols /. 2.; fy = (if pt = O then 1. else 0.) };
+      {
+        fx = float_of_int cols /. 2.;
+        fy = (if pt = O || pt = I then 1. else 0.);
+      };
   }
 
 (* [add_to_well g] adds the piece to the well and gives a new piece *)
