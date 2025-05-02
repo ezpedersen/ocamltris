@@ -36,6 +36,7 @@ type piece = {
 (* given a piece type, [piece_geometry t] is the points a piece takes up
    relative to its position *)
 let base_geometry = function
+  | Z -> [ fpoint 0. 0.; fpoint (-1.) 0.; fpoint 0. 1.; fpoint 1. 1. ]
   | I ->
       [ fpoint 0.5 0.5; fpoint 1.5 0.5; fpoint (-1.5) 0.5; fpoint (-0.5) 0.5 ]
   | J -> [ fpoint 0. 0.; fpoint 1. 0.; fpoint (-1.) 0.; fpoint (-1.) 1. ]
@@ -47,9 +48,8 @@ let base_geometry = function
         fpoint (-0.5) 0.5;
         fpoint (-0.5) (-0.5);
       ]
-  | S -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint 1. 1.; fpoint 0. (-1.) ]
-  | T -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint 1. 0.; fpoint (-1.) 0. ]
-  | Z -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint (-1.) 1.; fpoint 1. 0. ]
+  | T -> [ fpoint 0. 0.; fpoint 0. (-1.); fpoint 1. 0.; fpoint (-1.) 0. ]
+  | S -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint (-1.) 1.; fpoint 1. 0. ]
 
 let rotate_point_90 offset = fpoint offset.fy (-.offset.fx)
 
@@ -121,13 +121,16 @@ let clear_lines g =
 (* adds controlled piece to well and gives a new piece *)
 let add_to_well g =
   List.iter (fun { x; y } -> g.well.(y).(x) <- true) (piece_pos g.piece);
+  let pt = random_piece_type () in
+  clear_lines g;
   g.piece <-
     {
-      piece_type = random_piece_type ();
+      piece_type = pt;
       rotation = ref 0;
-      position = { fx = float_of_int g.cols /. 2.; fy = 0. };
+      position =
+        { fx = float_of_int g.cols /. 2.; fy = (if pt = O then 1. else 0.) };
     };
-  clear_lines g
+  if not @@ ok_place g.piece g then failwith "Game over!"
 
 let next_pos p x y =
   { p with position = { fx = p.position.fx +. x; fy = p.position.fy +. y } }
@@ -188,11 +191,13 @@ let get_entry g (x, y) =
 
 let create (cols, rows) =
   let well = Array.init rows (fun _ -> Array.init cols (fun _ -> false)) in
+  let pt = random_piece_type () in
   let piece =
     {
-      piece_type = random_piece_type ();
+      piece_type = pt;
       rotation = ref 0;
-      position = { fx = 2.; fy = 0. };
+      position =
+        { fx = float_of_int cols /. 2.; fy = (if pt = O then 1. else 0.) };
     }
   in
   { score = 0; well; cols; rows; piece }
