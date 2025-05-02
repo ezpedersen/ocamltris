@@ -39,7 +39,7 @@ let base_geometry = function
   | Z -> [ fpoint 0. 0.; fpoint (-1.) 0.; fpoint 0. 1.; fpoint 1. 1. ]
   | I ->
       [ fpoint 0.5 0.5; fpoint 1.5 0.5; fpoint (-1.5) 0.5; fpoint (-0.5) 0.5 ]
-  | J -> [ fpoint 0. 0.; fpoint 1. 0.; fpoint (-1.) 0.; fpoint (-1.) 1. ]
+  | J -> [ fpoint 0. 0.; fpoint 1. 0.; fpoint (-1.) 0.; fpoint 1. 1. ]
   | L -> [ fpoint 0. 0.; fpoint 1. 0.; fpoint (-1.) 0.; fpoint (-1.) 1. ]
   | O ->
       [
