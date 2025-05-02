@@ -43,14 +43,20 @@ let rec input_loop game =
       render game;
       input_loop game
   | 'j' ->
-      Tetris.tick game;
+      Tetris.tick game |> ignore;
+      render game;
+      input_loop game
+  | ' ' ->
+      while not (Tetris.tick game) do
+        ()
+      done;
       render game;
       input_loop game
   | _ -> input_loop game
 
 let rec render_loop game =
   Lwt_unix.sleep 1.0 >>= fun () ->
-  Tetris.tick game;
+  Tetris.tick game |> ignore;
   render game;
   render_loop game
 

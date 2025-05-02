@@ -146,7 +146,12 @@ let tick g =
       position = { g.piece.position with fy = g.piece.position.fy +. 1. };
     }
   in
-  if ok_place next_pos g then g.piece <- next_pos else add_to_well g
+  if ok_place next_pos g then
+    let () = g.piece <- next_pos in
+    false
+  else
+    let () = add_to_well g in
+    true
 
 let shift_right g n =
   let next_pos =
