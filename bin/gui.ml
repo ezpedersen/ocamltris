@@ -6,9 +6,10 @@ let rows = 20
 let tick_interval = 1.0
 
 let render c game =
-  Canvas.setFillColor c Color.white;
+  Canvas.setFillColor c Color.black;
   Canvas.fillRect c ~pos:(0., 0.)
-    ~size:(float_of_int cols *. cell_size, float_of_int rows *. cell_size);
+    ~size:
+      ((float_of_int cols *. cell_size) +. 400., float_of_int rows *. cell_size);
 
   for i = 0 to rows - 1 do
     for j = 0 to cols - 1 do
@@ -27,7 +28,15 @@ let render c game =
       Canvas.setStrokeColor c Color.black;
       Canvas.strokeRect c ~pos:(x, y) ~size:(cell_size, cell_size)
     done
-  done
+  done;
+  Canvas.setFillColor c Color.cyan;
+  Canvas.fillText c
+    (Printf.sprintf "Score: %d" (Tetris.get_score game))
+    ((float_of_int cols *. cell_size) +. 20., 10. +. 30.);
+
+  Canvas.fillText c
+    (Printf.sprintf "Held: %s" (Tetris.get_held game))
+    ((float_of_int cols *. cell_size) +. 20., 60. +. 30.)
 
 let () =
   Backend.init ();
@@ -38,9 +47,8 @@ let () =
       ~size:(width + 400, height)
       ()
   in
-  Canvas.setFillColor c Color.black;
-  Canvas.fillRect c ~pos:(0., 0.)
-    ~size:(float_of_int (width + 400), float_of_int height);
+  Canvas.setFont c "Liberation Sans" ~size:30.0 ~slant:Font.Roman
+    ~weight:Font.bold;
   let game = Tetris.create (cols, rows) in
   let last_tick = ref (Unix.gettimeofday ()) in
   render c game;

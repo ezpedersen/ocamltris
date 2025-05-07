@@ -132,7 +132,7 @@ let get_held g =
   | Some L -> "L"
   | Some J -> "J"
   | Some T -> "T"
-  | None -> "[]"
+  | None -> "None"
 
 let create_piece pt cols =
   {
