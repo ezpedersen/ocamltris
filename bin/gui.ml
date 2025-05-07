@@ -75,7 +75,9 @@ let () =
           | Event.KeyD -> Tetris.rotate_cw game
           | Event.KeyC -> Tetris.hold game
           | Event.KeyK -> Tetris.rotate_cw game
-          | Event.KeyJ -> ignore (Tetris.tick game)
+          | Event.KeyJ ->
+              ignore (Tetris.tick game);
+              last_tick := Unix.gettimeofday ()
           | Event.KeySpacebar -> Tetris.hard_drop game
           | _ -> ()
         in
