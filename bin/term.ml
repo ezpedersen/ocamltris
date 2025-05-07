@@ -22,10 +22,9 @@ let render game =
     for j = 0 to 9 do
       print_string
         (match Tetris.get_entry game (j, i) with
-        | 0 -> "."
-        | 1 -> "#"
-        | 2 -> "!"
-        | _ -> failwith "unreachable")
+        | "empty" -> "."
+        | "shadow" -> "!"
+        | _ -> "#")
     done;
     print_newline ()
   done
