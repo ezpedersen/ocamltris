@@ -172,19 +172,52 @@ let shift_right g n =
   let np = next_pos g.piece n 0. in
   if ok_place np g then g.piece <- np
 
+let wall_kicks_jltsz =
+  let tbl = Hashtbl.create 8 in
+  let add ft offsets = Hashtbl.add tbl ft offsets in
+  add (0, 1) [ (0, 0); (-1, 0); (-1, 1); (0, -2); (-1, -2) ];
+  add (1, 0) [ (0, 0); (1, 0); (1, -1); (0, 2); (1, 2) ];
+  add (1, 2) [ (0, 0); (1, 0); (1, -1); (0, 2); (1, 2) ];
+  add (2, 1) [ (0, 0); (-1, 0); (-1, 1); (0, -2); (-1, -2) ];
+  add (2, 3) [ (0, 0); (1, 0); (1, 1); (0, -2); (1, -2) ];
+  add (3, 2) [ (0, 0); (-1, 0); (-1, -1); (0, 2); (-1, 2) ];
+  add (3, 0) [ (0, 0); (-1, 0); (-1, -1); (0, 2); (-1, 2) ];
+  add (0, 3) [ (0, 0); (1, 0); (1, 1); (0, -2); (1, -2) ];
+  tbl
+
+let wall_kicks_i =
+  let tbl = Hashtbl.create 8 in
+  let add ft offsets = Hashtbl.add tbl ft offsets in
+  add (0, 1) [ (0, 0); (-2, 0); (1, 0); (-2, -1); (1, 2) ];
+  add (1, 0) [ (0, 0); (2, 0); (-1, 0); (2, 1); (-1, -2) ];
+  add (1, 2) [ (0, 0); (-1, 0); (2, 0); (-1, 2); (2, -1) ];
+  add (2, 1) [ (0, 0); (1, 0); (-2, 0); (1, -2); (-2, 1) ];
+  add (2, 3) [ (0, 0); (2, 0); (-1, 0); (2, 1); (-1, -2) ];
+  add (3, 2) [ (0, 0); (-2, 0); (1, 0); (-2, -1); (1, 2) ];
+  add (3, 0) [ (0, 0); (1, 0); (-2, 0); (1, -2); (-2, 1) ];
+  add (0, 3) [ (0, 0); (-1, 0); (2, 0); (-1, 2); (2, -1) ];
+  tbl
+
+(* https://tetris.fandom.com/wiki/SRS *)
 let rotate g n =
   let old_rot = !(g.piece.rotation) in
   let new_rot = !(g.piece.rotation) + n in
   let new_rot = if new_rot < 0 then 3 else if new_rot = 4 then 0 else new_rot in
   g.piece.rotation := new_rot;
-  if ok_place g.piece g then ()
-  else
-    let np = next_pos g.piece 1. 0. in
-    if ok_place np g then g.piece <- np
-    else
-      let np = next_pos g.piece (-1.) 0. in
-      if ok_place np g then g.piece <- np else g.piece.rotation := old_rot;
-      ()
+  let offset_lib =
+    if g.piece.piece_type = I then wall_kicks_i else wall_kicks_jltsz
+  in
+  let offsets = Hashtbl.find offset_lib (old_rot, new_rot) in
+  let good = ref false in
+  for i = 0 to 7 do
+    if not !good then
+      let x, y = List.nth offsets i in
+      let new_pos = next_pos g.piece (float_of_int x) (float_of_int y) in
+      if ok_place new_pos g then (
+        good := true;
+        g.piece <- { g.piece with position = new_pos.position })
+  done;
+  if not !good then g.piece.rotation := old_rot
 
 let rotate_ccw g = rotate g 1
 let rotate_cw g = rotate g (-1)
