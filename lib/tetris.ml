@@ -79,6 +79,7 @@ type t = {
   cols : int;
   mutable held : piece_type option;
   mutable piece : piece;
+  future_pieces : piece_type Queue.t;
   mutable switched : bool;
 }
 
@@ -155,8 +156,9 @@ let add_to_well g =
   List.iter
     (fun { x; y } -> g.well.(y).(x) <- string_of_piece_type g.piece.piece_type)
     (piece_pos g.piece);
-  let pt = random_piece_type () in
+  let pt = Queue.take g.future_pieces in
   clear_lines g;
+  Queue.add (random_piece_type ()) g.future_pieces;
   g.piece <- create_piece pt g.cols;
   if not @@ ok_place g.piece g then failwith "Game over!"
 
@@ -254,13 +256,27 @@ let create (cols, rows) =
   let well = Array.init rows (fun _ -> Array.init cols (fun _ -> "empty")) in
   let pt = random_piece_type () in
   let piece = create_piece pt cols in
-  { score = ref 0; well; cols; rows; piece; held = None; switched = false }
+  let future_pieces = Queue.create () in
+  for _ = 1 to 5 do
+    Queue.add (random_piece_type ()) future_pieces
+  done;
+  {
+    score = ref 0;
+    well;
+    cols;
+    rows;
+    piece;
+    held = None;
+    switched = false;
+    future_pieces;
+  }
 
 let hold g =
   if not g.switched then (
     let temp = g.piece.piece_type in
     if g.held = None then
-      let pt = random_piece_type () in
+      let pt = Queue.take g.future_pieces in
+      Queue.add (random_piece_type ()) g.future_pieces;
       g.piece <- create_piece pt g.cols
     else g.piece <- create_piece (Option.get g.held) g.cols;
     g.held <- Some temp;

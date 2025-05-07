@@ -1,5 +1,6 @@
 (** a tetris game *)
 type t
+
 (** returns a tetris game on an [x] by [y] board *)
 val create : int * int -> t
 (** causes selected block to fall down one tile *)
