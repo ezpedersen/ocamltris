@@ -1,6 +1,6 @@
 (executables
  (public_names tetris_gui tetris_term)
  (names gui term)
- (libraries tetris unix lwt.unix bogue)
+ (libraries tetris unix lwt.unix ocaml-canvas)
  (preprocess (pps lwt_ppx)))
 
