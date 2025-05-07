@@ -73,7 +73,7 @@ let piece_pos = piece_geometry
 
 type t = {
   score : int ref;
-  well : bool array array;
+  well : string array array;
       (* TODO: change to color or something so it looks better*)
   rows : int;
   cols : int;
@@ -97,7 +97,7 @@ let random_piece_type () =
 (* [true] if a block can be placed in [g]'s well at [(x, y)] *)
 let space_open g (x, y) =
   if x >= g.cols || x < 0 || y >= g.rows || y < 0 then false
-  else not g.well.(y).(x)
+  else g.well.(y).(x) = "empty"
 
 (* [ok_place p g] is true if [p] has blocks overlapping with [g]'s well or
    boundaries *)
@@ -105,7 +105,7 @@ let ok_place (p : piece) g =
   List.for_all (fun { x; y } -> space_open g (x, y)) (piece_pos p)
 
 let clear_lines g =
-  let row_full row = Array.for_all (fun x -> x) row in
+  let row_full row = Array.for_all (fun x -> x <> "empty") row in
 
   let new_rows =
     Array.fold_right
@@ -114,7 +114,7 @@ let clear_lines g =
   in
   let num_cleared = g.rows - List.length new_rows in
   for x = 0 to num_cleared - 1 do
-    g.well.(x) <- Array.make g.cols false
+    g.well.(x) <- Array.make g.cols "empty"
   done;
   for x = 0 to List.length new_rows - 1 do
     g.well.(x + num_cleared) <- List.nth new_rows x
@@ -123,15 +123,18 @@ let clear_lines g =
 
 let get_score g = !(g.score)
 
+let string_of_piece_type = function
+  | O -> "O"
+  | I -> "I"
+  | S -> "S"
+  | Z -> "Z"
+  | L -> "L"
+  | J -> "J"
+  | T -> "T"
+
 let get_held g =
   match g.held with
-  | Some O -> "O"
-  | Some I -> "I"
-  | Some S -> "S"
-  | Some Z -> "Z"
-  | Some L -> "L"
-  | Some J -> "J"
-  | Some T -> "T"
+  | Some x -> string_of_piece_type x
   | None -> "None"
 
 let create_piece pt cols =
@@ -149,7 +152,9 @@ let create_piece pt cols =
 (* adds controlled piece to well and gives a new piece *)
 let add_to_well g =
   g.switched <- false;
-  List.iter (fun { x; y } -> g.well.(y).(x) <- true) (piece_pos g.piece);
+  List.iter
+    (fun { x; y } -> g.well.(y).(x) <- string_of_piece_type g.piece.piece_type)
+    (piece_pos g.piece);
   let pt = random_piece_type () in
   clear_lines g;
   g.piece <- create_piece pt g.cols;
@@ -232,21 +237,21 @@ let calculate_shadow g =
   !good
 
 let get_entry g (x, y) =
-  if
-    (not @@ space_open g (x, y))
-    || List.exists
-         (fun { x = p_x; y = p_y } -> x = p_x && y = p_y)
-         (piece_pos g.piece)
-  then 1
+  if not @@ space_open g (x, y) then g.well.(y).(x)
+  else if
+    List.exists
+      (fun { x = p_x; y = p_y } -> x = p_x && y = p_y)
+      (piece_pos g.piece)
+  then string_of_piece_type g.piece.piece_type
   else if
     List.exists
       (fun { x = p_x; y = p_y } -> x = p_x && y = p_y)
       (piece_pos @@ calculate_shadow g)
-  then 2
-  else 0
+  then "shadow"
+  else "empty"
 
 let create (cols, rows) =
-  let well = Array.init rows (fun _ -> Array.init cols (fun _ -> false)) in
+  let well = Array.init rows (fun _ -> Array.init cols (fun _ -> "empty")) in
   let pt = random_piece_type () in
   let piece = create_piece pt cols in
   { score = ref 0; well; cols; rows; piece; held = None; switched = false }

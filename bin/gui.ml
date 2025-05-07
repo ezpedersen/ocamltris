@@ -16,9 +16,15 @@ let render c game =
       let entry = Tetris.get_entry game (j, i) in
       let color =
         match entry with
-        | 0 -> Color.green
-        | 1 -> Color.blue
-        | 2 -> Color.red
+        | "empty" -> Color.green
+        | "I" -> Color.blue
+        | "J" -> Color.blue
+        | "Z" -> Color.blue
+        | "O" -> Color.white
+        | "S" -> Color.lime
+        | "T" -> Color.pink
+        | "L" -> Color.orange
+        | "shadow" -> Color.red
         | _ -> Color.black
       in
       let x = float_of_int j *. cell_size in
