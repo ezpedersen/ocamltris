@@ -16,22 +16,23 @@ let render c game =
       let entry = Tetris.get_entry game (j, i) in
       let color =
         match entry with
-        | "empty" -> Color.green
-        | "I" -> Color.blue
+        | "empty" -> Color.black
+        | "I" -> Color.cyan
         | "J" -> Color.blue
-        | "Z" -> Color.blue
-        | "O" -> Color.white
-        | "S" -> Color.lime
-        | "T" -> Color.pink
+        | "Z" -> Color.red
+        | "O" -> Color.of_string "#ffff00"
+        | "S" -> Color.of_string "#00ff00"
+        | "T" -> Color.of_string "#cc00ff"
         | "L" -> Color.orange
-        | "shadow" -> Color.red
+        | "shadow" -> Color.white
         | _ -> Color.black
       in
       let x = float_of_int j *. cell_size in
       let y = float_of_int i *. cell_size in
       Canvas.setFillColor c color;
+
       Canvas.fillRect c ~pos:(x, y) ~size:(cell_size, cell_size);
-      Canvas.setStrokeColor c Color.black;
+      Canvas.setStrokeColor c (Color.of_string "#3d3846");
       Canvas.strokeRect c ~pos:(x, y) ~size:(cell_size, cell_size)
     done
   done;
@@ -55,6 +56,7 @@ let () =
   in
   Canvas.setFont c "Liberation Sans" ~size:30.0 ~slant:Font.Roman
     ~weight:Font.bold;
+  Canvas.setLineWidth c 2.;
   let game = Tetris.create (cols, rows) in
   let last_tick = ref (Unix.gettimeofday ()) in
   render c game;
