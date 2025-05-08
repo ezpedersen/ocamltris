@@ -118,7 +118,9 @@ let () =
         | Event.KeyD -> Tetris.rotate_cw g
         | Event.KeyC -> Tetris.hold g
         | Event.KeyK -> Tetris.rotate_cw g
-        | Event.KeyJ -> ignore (Tetris.tick g)
+        | Event.KeyJ -> 
+          ignore (Tetris.tick g);
+          last_tick := Unix.gettimeofday ()
         | Event.KeySpacebar -> Tetris.hard_drop g
         | Event.KeyP -> current_state := Pause g
         | _ -> ()
