@@ -81,6 +81,7 @@ type t = {
   mutable piece : piece;
   future_pieces : piece_type Queue.t;
   mutable switched : bool;
+  mutable game_over : bool;
 }
 
 let random_piece_type () =
@@ -160,7 +161,7 @@ let add_to_well g =
   clear_lines g;
   Queue.add (random_piece_type ()) g.future_pieces;
   g.piece <- create_piece pt g.cols;
-  if not @@ ok_place g.piece g then failwith "Game over!"
+  if not @@ ok_place g.piece g then g.game_over <- true
 
 let next_pos p x y =
   { p with position = { fx = p.position.fx +. x; fy = p.position.fy +. y } }
@@ -269,6 +270,7 @@ let create (cols, rows) =
     held = None;
     switched = false;
     future_pieces;
+    game_over = false;
   }
 
 let hold g =
@@ -285,3 +287,5 @@ let hold g =
 let hard_drop g =
   g.piece <- calculate_shadow g;
   add_to_well g
+
+let is_game_over g = g.game_over

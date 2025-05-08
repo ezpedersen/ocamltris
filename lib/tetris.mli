@@ -23,3 +23,5 @@ val get_score : t -> int
 val get_held : t -> string
 (** holds a piece *)
 val hold : t -> unit
+(** checks if game is game-over*)
+val is_game_over : t -> bool

@@ -1,11 +1,31 @@
 open OcamlCanvas.V1
 
+type gui_state =
+  | Title
+  | Game of Tetris.t
+  | GameOver of Tetris.t
+  | Pause of Tetris.t
+  | About
+
+let current_state = ref Title
 let cell_size = 30.
 let cols = 10
 let rows = 20
 let tick_interval = 1.0
 
-let render c game =
+let render_title_screen c =
+  Canvas.setFillColor c Color.black;
+  Canvas.fillRect c ~pos:(0., 0.)
+    ~size:
+      ((float_of_int cols *. cell_size) +. 400., float_of_int rows *. cell_size);
+  Canvas.setFillColor c Color.white;
+  Canvas.fillText c "Welcome to Ocamltris!"
+    ((float_of_int cols *. cell_size) /. 2. -. 100., 100.);
+  Canvas.fillText c "Press SPACE to start"
+    ((float_of_int cols *. cell_size) /. 2. -. 100., 150.);
+  Canvas.show c
+
+let render_game c game =
   Canvas.setFillColor c Color.black;
   Canvas.fillRect c ~pos:(0., 0.)
     ~size:
@@ -45,8 +65,29 @@ let render c game =
     (Printf.sprintf "Held: %s" (Tetris.get_held game))
     ((float_of_int cols *. cell_size) +. 20., 60. +. 30.)
 
+
+let render c =
+  match !current_state with
+  | Game g -> render_game c g
+  | Title -> render_title_screen c
+  | GameOver g -> render_game c g;
+    Canvas.setFillColor c Color.red;
+    Canvas.fillText c "Game Over!" ((float_of_int cols *. cell_size) /. 2., 100.);
+    Canvas.fillText c "Press R to restart"
+      ((float_of_int cols *. cell_size) /. 2., 150.);
+  | Pause g -> render_game c g;
+    Canvas.setFillColor c Color.green;
+    Canvas.fillText c "Paused" ((float_of_int cols *. cell_size) /. 2., 100.);
+    Canvas.fillText c "Press P to resume"
+      ((float_of_int cols *. cell_size) /. 2., 150.);
+  | About -> ()
+    
+    
+
 let () =
+
   Backend.init ();
+
   let width = int_of_float (float_of_int cols *. cell_size) in
   let height = int_of_float (float_of_int rows *. cell_size) in
   let c =
@@ -57,41 +98,74 @@ let () =
   Canvas.setFont c "Liberation Sans" ~size:30.0 ~slant:Font.Roman
     ~weight:Font.bold;
   Canvas.setLineWidth c 2.;
-  let game = Tetris.create (cols, rows) in
+
   let last_tick = ref (Unix.gettimeofday ()) in
-  render c game;
+  render_title_screen c;
   Canvas.show c;
   let stop_on_close = React.E.map (fun _ -> Backend.stop ()) Event.close in
 
   let controls =
     React.E.map
       (fun { Event.data = { Event.key; _ }; _ } ->
+      match !current_state with
+      | Game g ->
         let _ =
-          match key with
-          | Event.KeyQ -> Backend.stop ()
-          | Event.KeyH -> Tetris.shift_right game (-1)
-          | Event.KeyL -> Tetris.shift_right game 1
-          | Event.KeyA -> Tetris.rotate_ccw game
-          | Event.KeyD -> Tetris.rotate_cw game
-          | Event.KeyC -> Tetris.hold game
-          | Event.KeyK -> Tetris.rotate_cw game
-          | Event.KeyJ -> ignore (Tetris.tick game)
-          | Event.KeySpacebar -> Tetris.hard_drop game
-          | _ -> ()
+        match key with
+        | Event.KeyQ -> Backend.stop ()
+        | Event.KeyH -> Tetris.shift_right g (-1)
+        | Event.KeyL -> Tetris.shift_right g 1
+        | Event.KeyA -> Tetris.rotate_ccw g
+        | Event.KeyD -> Tetris.rotate_cw g
+        | Event.KeyC -> Tetris.hold g
+        | Event.KeyK -> Tetris.rotate_cw g
+        | Event.KeyJ -> ignore (Tetris.tick g)
+        | Event.KeySpacebar -> Tetris.hard_drop g
+        | Event.KeyP -> current_state := Pause g
+        | _ -> ()
         in
-        render c game)
+        render c
+      | Title ->
+        (match key with
+        | Event.KeySpacebar ->
+          let game = Tetris.create (cols, rows) in
+          current_state := Game game;
+          last_tick := Unix.gettimeofday ();
+          render c
+        | _ -> ())
+      | Pause g ->
+        (match key with
+        | Event.KeyP ->
+          current_state := Game g;
+          last_tick := Unix.gettimeofday ();
+          render c
+        | _ -> ())
+      | GameOver g ->
+        (match key with
+        | Event.KeyR ->
+          let game = Tetris.create (cols, rows) in
+          current_state := Game game;
+          last_tick := Unix.gettimeofday ();
+          render c
+        | _ -> ())
+      | _ -> ())
       Event.key_down
-  in
+    in
   let _ =
     React.E.map
       (fun { Event.timestamp; _ } ->
+      match !current_state with
+      | Game g ->
+        if Tetris.is_game_over g then
+          current_state := GameOver g
+        else (
         let now = Unix.gettimeofday () in
         let delta_time = now -. !last_tick in
         if delta_time >= tick_interval then begin
-          ignore (Tetris.tick game);
+          ignore (Tetris.tick g);
           last_tick := now;
-          render c game
-        end)
+        end);
+        render c
+      | _ -> ())
       Event.frame
   in
   Backend.run (fun () ->
