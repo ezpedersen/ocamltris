@@ -129,7 +129,6 @@ let () =
                   last_tick := Unix.gettimeofday ()
               | Event.KeySpacebar -> Tetris.hard_drop g
               | Event.KeyP -> current_state := Pause g
-              | Event.KeyY -> Tetris.add_garbage g 1
               | _ -> ()
             in
             render c
@@ -156,6 +155,32 @@ let () =
                 last_tick := Unix.gettimeofday ();
                 render c
             | _ -> ())
+        | Game2P g ->
+            let _ =
+              match key with
+              | Event.KeyQ -> Backend.stop ()
+              | Event.KeyA -> Tetris2P.shift_left g (-1)
+              | Event.KeyD -> Tetris2P.shift_left g 1
+              | Event.KeyW -> Tetris2P.rotate_ccw_left g
+              | Event.KeyX -> Tetris2P.hold_left g
+              | Event.KeyS ->
+                  ignore (Tetris2P.tick_left g);
+                  last_tick := Unix.gettimeofday ()
+              | Event.KeyC -> Tetris2P.hard_drop_left g
+              | Event.KeyP -> current_state := Pause2P g
+
+              | Event.KeyJ -> Tetris2P.shift_right g (-1)
+              | Event.KeyL -> Tetris2P.shift_right g 1
+              | Event.KeyI -> Tetris2P.rotate_ccw_right g
+              | Event.KeyN -> Tetris2P.hold_left g
+              | Event.KeyK ->
+                  ignore (Tetris2P.tick_left g);
+                  last_tick := Unix.gettimeofday ()
+              | Event.KeyM -> Tetris2P.hard_drop_left g
+              
+              | _ -> ()
+            in
+            render c
         | _ -> ())
       Event.key_down
   in
