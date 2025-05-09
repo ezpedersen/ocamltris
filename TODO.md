@@ -1,3 +1,4 @@
+- 2 player gui
 - Implement proper score and line tracking
 - Implement levels (certain amount of lines -> level up -> faster falling shit)
 - Implement next pieces preview (game already tracks next pieces, just need to display in gui)
