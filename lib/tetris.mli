@@ -6,7 +6,7 @@ val create : int * int -> t
 (** causes selected block to fall down one tile *)
 val tick : t -> bool
 (** shifts the selected block [n] units right and returns true if block was placed *)
-val shift_right : t -> int -> unit
+val shift : t -> int -> unit
 (** [get_entry b (x, y)] is true if a block exists at [(x, y)] in [b] *)
 val get_entry : t -> int * int -> string
 (** hards drops the piece *)
@@ -25,3 +25,5 @@ val get_held : t -> string
 val hold : t -> unit
 (** checks if game is game-over*)
 val is_game_over : t -> bool
+(** adds a [n] lines of garbage to the bottom of the board *)
+val add_garbage : t -> int -> unit

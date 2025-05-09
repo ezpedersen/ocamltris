@@ -1,2 +1,5 @@
 (library
- (name tetris))
+ (name tetris)
+ (public_name tetris)
+ (modules Tetris Tetris2P)
+ (wrapped false))

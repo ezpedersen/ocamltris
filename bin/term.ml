@@ -38,10 +38,10 @@ let rec input_loop game =
   Lwt_io.read_char Lwt_io.stdin >>= function
   | 'q' -> Lwt.fail Exit
   | 'h' ->
-      Tetris.shift_right game (-1);
+      Tetris.shift game (-1);
       after ()
   | 'l' ->
-      Tetris.shift_right game 1;
+      Tetris.shift game 1;
       after ()
   | 'a' ->
       Tetris.rotate_ccw game;

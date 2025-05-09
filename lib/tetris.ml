@@ -104,7 +104,10 @@ let space_open g (x, y) =
 (* [ok_place p g] is true if [p] has blocks overlapping with [g]'s well or
    boundaries *)
 let ok_place (p : piece) g =
-  List.for_all (fun { x; y } -> space_open g (x, y)) (piece_pos p)
+  List.for_all
+    (fun { x; y } ->
+      x >= 0 && x < g.cols && y >= 0 && y < g.rows && space_open g (x, y))
+    (piece_pos p)
 
 let clear_lines g =
   let row_full row = Array.for_all (fun x -> x <> "empty") row in
@@ -175,7 +178,7 @@ let tick g =
     let () = add_to_well g in
     true
 
-let shift_right g n =
+let shift g n =
   let n = float_of_int n in
   let np = next_pos g.piece n 0. in
   if ok_place np g then g.piece <- np
@@ -217,7 +220,7 @@ let rotate g n =
   in
   let offsets = Hashtbl.find offset_lib (old_rot, new_rot) in
   let good = ref false in
-  for i = 0 to 7 do
+  for i = 0 to 4 do
     if not !good then
       let x, y = List.nth offsets i in
       let new_pos = next_pos g.piece (float_of_int x) (float_of_int y) in
@@ -276,10 +279,10 @@ let create (cols, rows) =
 let hold g =
   if not g.switched then (
     let temp = g.piece.piece_type in
-    if g.held = None then
+    if g.held = None then (
       let pt = Queue.take g.future_pieces in
       Queue.add (random_piece_type ()) g.future_pieces;
-      g.piece <- create_piece pt g.cols
+      g.piece <- create_piece pt g.cols)
     else g.piece <- create_piece (Option.get g.held) g.cols;
     g.held <- Some temp;
     g.switched <- true)
@@ -289,3 +292,31 @@ let hard_drop g =
   add_to_well g
 
 let is_game_over g = g.game_over
+
+let get_garbage_row g () =
+  let garbage_index = Random.int g.cols in
+  let garbage_row =
+    Array.init g.cols (fun i ->
+        if i = garbage_index then "empty" else "garbage")
+  in
+  garbage_row
+
+let add_garbage g n =
+  if n = 0 then ()
+  else
+    for i = 0 to n - 1 do
+      if Array.exists (fun x -> x <> "empty") g.well.(i) then
+        g.game_over <- true
+    done;
+  for i = n to g.rows - 1 do
+    g.well.(i - n) <- g.well.(i)
+  done;
+  for i = g.rows - n to g.rows - 1 do
+    g.well.(i) <- get_garbage_row g ()
+  done;
+  let i = ref n in
+  while !i >= 0 && not (ok_place g.piece g) do
+    g.piece <- next_pos g.piece 0. (-1.);
+    i := !i - 1
+  done;
+  if not (ok_place g.piece g) then g.game_over <- true
