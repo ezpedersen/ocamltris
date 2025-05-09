@@ -5,7 +5,10 @@ type gui_state =
   | Game of Tetris.t
   | GameOver of Tetris.t
   | Pause of Tetris.t
-  | About
+  | Game2P of Tetris2P.t
+  | GameOver2P of Tetris2P.t
+  | Pause2P of Tetris2P.t
+  | Controls
 
 let current_state = ref Title
 let cell_size = 30.
@@ -82,7 +85,11 @@ let render c =
       Canvas.fillText c "Paused" (float_of_int cols *. cell_size /. 2., 100.);
       Canvas.fillText c "Press P to resume"
         (float_of_int cols *. cell_size /. 2., 150.)
-  | About -> ()
+  | Controls -> () (* TODO *)
+  | Game2P _ -> () (* TODO *)
+  | GameOver2P _ -> () (* TODO *)
+  | Pause2P _ -> () (* TODO *)
+
 
 let () =
   Backend.init ();
