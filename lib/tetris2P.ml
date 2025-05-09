@@ -34,16 +34,41 @@ let tick_right g =
   Tetris.tick g.right |> ignore;
   add_garbage g
 
-let shift_left g n = Tetris.shift g.left n; add_garbage g
-let shift_right g n = Tetris.shift g.right n; add_garbage g
+let shift_left g n =
+  Tetris.shift g.left n;
+  add_garbage g
+
+let shift_right g n =
+  Tetris.shift g.right n;
+  add_garbage g
+
 let get_entry_left g (x, y) = Tetris.get_entry g.left (x, y)
 let get_entry_right g (x, y) = Tetris.get_entry g.right (x, y)
-let rotate_ccw_left g = Tetris.rotate_ccw g.left; add_garbage g
-let rotate_ccw_right g = Tetris.rotate_ccw g.right; add_garbage g
-let rotate_cw_left g = Tetris.rotate_cw g.left; add_garbage g
-let rotate_cw_right g = Tetris.rotate_cw g.right; add_garbage g
-let hard_drop_left g = Tetris.hard_drop g.left; add_garbage g
-let hard_drop_right g = Tetris.hard_drop g.right; add_garbage g
+
+let rotate_ccw_left g =
+  Tetris.rotate_ccw g.left;
+  add_garbage g
+
+let rotate_ccw_right g =
+  Tetris.rotate_ccw g.right;
+  add_garbage g
+
+let rotate_cw_left g =
+  Tetris.rotate_cw g.left;
+  add_garbage g
+
+let rotate_cw_right g =
+  Tetris.rotate_cw g.right;
+  add_garbage g
+
+let hard_drop_left g =
+  Tetris.hard_drop g.left;
+  add_garbage g
+
+let hard_drop_right g =
+  Tetris.hard_drop g.right;
+  add_garbage g
+
 let get_scores g = (Tetris.get_score g.left, Tetris.get_score g.right)
 let get_held g = (Tetris.get_held g.left, Tetris.get_held g.right)
 let hold_left g = Tetris.hold g.left
