@@ -90,7 +90,6 @@ let render c =
   | GameOver2P _ -> () (* TODO *)
   | Pause2P _ -> () (* TODO *)
 
-
 let () =
   Backend.init ();
 
@@ -168,7 +167,6 @@ let () =
                   last_tick := Unix.gettimeofday ()
               | Event.KeyC -> Tetris2P.hard_drop_left g
               | Event.KeyP -> current_state := Pause2P g
-
               | Event.KeyJ -> Tetris2P.shift_right g (-1)
               | Event.KeyL -> Tetris2P.shift_right g 1
               | Event.KeyI -> Tetris2P.rotate_ccw_right g
@@ -177,7 +175,6 @@ let () =
                   ignore (Tetris2P.tick_left g);
                   last_tick := Unix.gettimeofday ()
               | Event.KeyM -> Tetris2P.hard_drop_left g
-              
               | _ -> ()
             in
             render c
@@ -189,15 +186,16 @@ let () =
       (fun { Event.timestamp; _ } ->
         match !current_state with
         | Game g ->
-            (if Tetris.is_game_over g then current_state := GameOver g
-             else
-               let now = Unix.gettimeofday () in
-               let delta_time = now -. !last_tick in
-               if delta_time >= tick_interval then begin
-                 ignore (Tetris.tick g);
-                 last_tick := now
-               end);
-            render c
+            if Tetris.is_game_over g then (
+              current_state := GameOver g;
+              render c)
+            else
+              let now = Unix.gettimeofday () in
+              let delta_time = now -. !last_tick in
+              if delta_time >= tick_interval then (
+                ignore (Tetris.tick g);
+                last_tick := now;
+                render c)
         | _ -> ())
       Event.frame
   in

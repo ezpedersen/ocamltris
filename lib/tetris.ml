@@ -74,7 +74,6 @@ let piece_pos = piece_geometry
 type t = {
   score : int ref;
   well : string array array;
-      (* TODO: change to color or something so it looks better*)
   rows : int;
   cols : int;
   mutable held : piece_type option;
