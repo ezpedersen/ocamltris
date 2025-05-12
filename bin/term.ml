@@ -90,7 +90,7 @@ let () =
   let original_termios = Unix.tcgetattr Unix.stdin in
   enable_raw_mode ();
   print_endline "Raw mode enabled. Press 'q' to quit.";
-  let game = Tetris.create (10, 20) in
+  let game = Tetris.create (10, 20) false 0 in
   Lwt_main.run
     (Lwt.catch
        (fun () -> Lwt.join [ render_loop game; input_loop game ])

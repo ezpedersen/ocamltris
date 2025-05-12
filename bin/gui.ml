@@ -276,7 +276,7 @@ let () =
         | Title -> (
             match key with
             | Event.Key1Exclamation ->
-                let game = Tetris.create (cols, rows) in
+                let game = Tetris.create (cols, rows) false 0 in
                 current_state := Game game;
                 last_tick_p1 := Unix.gettimeofday ();
                 render c
@@ -300,7 +300,7 @@ let () =
         | GameOver g -> (
             match key with
             | Event.KeyR ->
-                let game = Tetris.create (cols, rows) in
+                let game = Tetris.create (cols, rows) false 0 in
                 current_state := Game game;
                 last_tick_p1 := Unix.gettimeofday ();
                 render c

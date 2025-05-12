@@ -1,8 +1,10 @@
 (** a tetris game *)
 type t
 
-(** returns a tetris game on an [x] by [y] board *)
-val create : int * int -> t
+(** [create x y bot diff]returns a tetris game on an [x] by [y] board, with 
+[bot] determining if a bot is playing and [diff] determing the difficulty. 
+  Requires: 0 <= [diff] <= 4.*)
+val create : int * int -> bool -> int -> t
 (** causes selected block to fall down one tile *)
 val tick : t -> bool
 (** shifts the selected block [n] units right and returns true if block was placed *)

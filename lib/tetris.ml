@@ -195,7 +195,7 @@ let get_entry g (x, y) =
   then "shadow"
   else "empty"
 
-let create (cols, rows) =
+let create (cols, rows) bot_enabled difficulty =
   let well = Array.init rows (fun _ -> Array.init cols (fun _ -> "empty")) in
   let pt = random_piece_type () in
   let piece = create_piece pt cols in
@@ -215,9 +215,9 @@ let create (cols, rows) =
       switched = false;
       future_pieces;
       game_over = false;
-      bot_mode = ref true;
+      bot_mode = ref bot_enabled;
       last_bot_move = Unix.gettimeofday ();
-      bot_difficulty = 4;
+      bot_difficulty = difficulty;
     }
   in
   game
