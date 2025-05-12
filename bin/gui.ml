@@ -260,16 +260,15 @@ let () =
             let _ =
               match key with
               | Event.KeyQ -> Backend.stop ()
-              | Event.KeyH -> Tetris.shift g (-1)
-              | Event.KeyL -> Tetris.shift g 1
-              | Event.KeyA -> Tetris.rotate_ccw g
-              | Event.KeyD -> Tetris.rotate_cw g
+              | Event.KeyA -> Tetris.shift g (-1)
+              | Event.KeyD -> Tetris.shift g 1
+              | Event.KeyW -> Tetris.rotate_ccw g
+              | Event.KeyS -> Tetris.rotate_cw g
               | Event.KeyC -> Tetris.hold g
-              | Event.KeyK -> Tetris.rotate_cw g
-              | Event.KeyJ ->
+              | Event.KeyZ ->
                   ignore (Tetris.tick g);
                   last_tick_p1 := Unix.gettimeofday ()
-              | Event.KeySpacebar -> Tetris.hard_drop g
+              | Event.KeyX -> Tetris.hard_drop g
               | Event.KeyP -> current_state := Pause g
               | _ -> ()
             in

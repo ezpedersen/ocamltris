@@ -12,6 +12,8 @@ type t = {
   mutable game_over : bool;
   mutable bot_mode : bool ref;
   mutable last_bot_move : float;
+  mutable bot_difficulty : int;
+      (*0 to 4 for easy, medium, hard, expert, impossible*)
 }
 
 let random_piece_type () =
@@ -212,6 +214,7 @@ let create (cols, rows) =
       game_over = false;
       bot_mode = ref true;
       last_bot_move = Unix.gettimeofday ();
+      bot_difficulty = 4;
     }
   in
   game
@@ -247,8 +250,19 @@ let add_garbage g n =
   done;
   if not (ok_place g.piece g) then g.game_over <- true
 
+let get_cooldown difficulty =
+  match difficulty with
+  | 0 -> 0.4
+  | 1 -> 0.2
+  | 2 -> 0.1
+  | 3 -> 0.05
+  | _ -> 0.
+
 let apply_bot_move g =
-  if !(g.bot_mode) && Unix.gettimeofday () -. g.last_bot_move > 0.05 then begin
+  if
+    !(g.bot_mode)
+    && Unix.gettimeofday () -. g.last_bot_move > get_cooldown g.bot_difficulty
+  then begin
     let held_piece =
       match g.held with
       | None -> create_piece O g.cols
