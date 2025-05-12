@@ -1,75 +1,4 @@
-type point = {
-  x : int;
-  y : int;
-}
-(* respresents a point in 2D space *)
-
-(* helper function for creating points *)
-let point x y = { x; y }
-
-type fpoint = {
-  fx : float;
-  fy : float;
-}
-
-let fpoint fx fy = { fx; fy }
-
-type piece_type =
-  | O
-  | I
-  | S
-  | Z
-  | L
-  | J
-  | T
-
-type piece = {
-  piece_type : piece_type;
-  rotation : int ref;
-  position : fpoint;
-      (* position of "fpoint" of piece, see https://shorturl.at/GEqmK *)
-}
-(* represents a piece being controlled (one in the well its just blocks) *)
-
-(*https://gamedev.stackexchange.com/questions/208367/how-is-rotation-defined-in-a-tetris-game*)
-
-(* given a piece type, [piece_geometry t] is the points a piece takes up
-   relative to its position *)
-let base_geometry = function
-  | Z -> [ fpoint 0. 0.; fpoint (-1.) 0.; fpoint 0. 1.; fpoint 1. 1. ]
-  | I ->
-      [ fpoint 0.5 0.5; fpoint 1.5 0.5; fpoint (-1.5) 0.5; fpoint (-0.5) 0.5 ]
-  | J -> [ fpoint 0. 0.; fpoint 1. 0.; fpoint (-1.) 0.; fpoint 1. 1. ]
-  | L -> [ fpoint 0. 0.; fpoint 1. 0.; fpoint (-1.) 0.; fpoint (-1.) 1. ]
-  | O ->
-      [
-        fpoint 0.5 0.5;
-        fpoint 0.5 (-0.5);
-        fpoint (-0.5) 0.5;
-        fpoint (-0.5) (-0.5);
-      ]
-  | T -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint 1. 1.; fpoint (-1.) 1. ]
-  | S -> [ fpoint 0. 0.; fpoint 0. 1.; fpoint (-1.) 1.; fpoint 1. 0. ]
-
-let rotate_point_90 offset = fpoint offset.fy (-.offset.fx)
-
-let rotated_geometry p =
-  let rec rotation_function n x =
-    if n = 0 then x else rotate_point_90 x |> rotation_function (n - 1)
-  in
-  List.map (rotation_function !(p.rotation)) (base_geometry p.piece_type)
-
-let point_of_fpoint a =
-  point (int_of_float (floor a.fx)) (a.fy |> floor |> int_of_float)
-
-let piece_geometry p =
-  List.map
-    (fun x ->
-      { fx = p.position.fx +. x.fx; fy = p.position.fy +. x.fy }
-      |> point_of_fpoint)
-    (rotated_geometry p)
-
-let piece_pos = piece_geometry
+include Geometry
 
 type t = {
   score : int ref;
@@ -81,6 +10,8 @@ type t = {
   future_pieces : piece_type Queue.t;
   mutable switched : bool;
   mutable game_over : bool;
+  mutable bot_mode : bool ref;
+  mutable last_bot_move : float;
 }
 
 let random_piece_type () =
@@ -127,15 +58,6 @@ let clear_lines g =
 
 let get_score g = !(g.score)
 
-let string_of_piece_type = function
-  | O -> "O"
-  | I -> "I"
-  | S -> "S"
-  | Z -> "Z"
-  | L -> "L"
-  | J -> "J"
-  | T -> "T"
-
 let get_held g =
   match g.held with
   | Some x -> string_of_piece_type x
@@ -167,15 +89,6 @@ let add_to_well g =
 
 let next_pos p x y =
   { p with position = { fx = p.position.fx +. x; fy = p.position.fy +. y } }
-
-let tick g =
-  let np = next_pos g.piece 0. 1. in
-  if ok_place np g then
-    let () = g.piece <- np in
-    false
-  else
-    let () = add_to_well g in
-    true
 
 let shift g n =
   let n = float_of_int n in
@@ -241,6 +154,29 @@ let calculate_shadow g =
   done;
   !good
 
+let hard_drop g =
+  g.piece <- calculate_shadow g;
+  add_to_well g
+
+let is_game_over g = g.game_over
+
+let get_garbage_row g () =
+  let garbage_index = Random.int g.cols in
+  let garbage_row =
+    Array.init g.cols (fun i ->
+        if i = garbage_index then "empty" else "garbage")
+  in
+  garbage_row
+
+let tick g =
+  let np = next_pos g.piece 0. 1. in
+  if ok_place np g then
+    let () = g.piece <- np in
+    false
+  else
+    let () = add_to_well g in
+    true
+
 let get_entry g (x, y) =
   if not @@ space_open g (x, y) then g.well.(y).(x)
   else if
@@ -263,17 +199,22 @@ let create (cols, rows) =
   for _ = 1 to 5 do
     Queue.add (random_piece_type ()) future_pieces
   done;
-  {
-    score = ref 0;
-    well;
-    cols;
-    rows;
-    piece;
-    held = None;
-    switched = false;
-    future_pieces;
-    game_over = false;
-  }
+  let game =
+    {
+      score = ref 0;
+      well;
+      cols;
+      rows;
+      piece;
+      held = None;
+      switched = false;
+      future_pieces;
+      game_over = false;
+      bot_mode = ref true;
+      last_bot_move = Unix.gettimeofday ();
+    }
+  in
+  game
 
 let hold g =
   if not g.switched then (
@@ -285,20 +226,6 @@ let hold g =
     else g.piece <- create_piece (Option.get g.held) g.cols;
     g.held <- Some temp;
     g.switched <- true)
-
-let hard_drop g =
-  g.piece <- calculate_shadow g;
-  add_to_well g
-
-let is_game_over g = g.game_over
-
-let get_garbage_row g () =
-  let garbage_index = Random.int g.cols in
-  let garbage_row =
-    Array.init g.cols (fun i ->
-        if i = garbage_index then "empty" else "garbage")
-  in
-  garbage_row
 
 let add_garbage g n =
   if n = 0 then ()
@@ -319,3 +246,23 @@ let add_garbage g n =
     i := !i - 1
   done;
   if not (ok_place g.piece g) then g.game_over <- true
+
+let apply_bot_move g =
+  if !(g.bot_mode) && Unix.gettimeofday () -. g.last_bot_move > 0.05 then begin
+    let held_piece =
+      match g.held with
+      | None -> create_piece O g.cols
+      | Some piece_type -> create_piece piece_type g.cols
+    in
+    let move = Bot.get_next_move g.well g.piece held_piece in
+    (match move with
+    | ShiftLeft -> shift g (-1)
+    | ShiftRight -> shift g 1
+    | RotateCW -> rotate_cw g
+    | RotateCCW -> rotate_ccw g
+    | Hold -> hold g
+    | HardDrop -> hard_drop g);
+    g.last_bot_move <- Unix.gettimeofday ();
+    true
+  end
+  else false

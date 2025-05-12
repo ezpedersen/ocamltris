@@ -41,3 +41,7 @@ val hold_right : t -> unit
 (** holds a piece on right player's board *)
 val is_game_over : t -> bool * bool
 (** checks if player's games are game-over*)
+
+val apply_bot_move: t -> bool
+(** Advances the bots on both boards, if they are enabled. 
+  Returns true if both board had bots moved.*)

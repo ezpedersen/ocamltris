@@ -74,3 +74,6 @@ let get_held g = (Tetris.get_held g.left, Tetris.get_held g.right)
 let hold_left g = Tetris.hold g.left
 let hold_right g = Tetris.hold g.right
 let is_game_over g = (Tetris.is_game_over g.left, Tetris.is_game_over g.right)
+
+let apply_bot_move g =
+  Tetris.apply_bot_move g.left && Tetris.apply_bot_move g.right

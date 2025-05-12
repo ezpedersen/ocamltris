@@ -1,5 +1,6 @@
 (library
  (name tetris)
  (public_name tetris)
- (modules Tetris Tetris2P)
+ (modules Tetris Tetris2P bot Geometry)
+ (libraries lwt.unix)
  (wrapped false))

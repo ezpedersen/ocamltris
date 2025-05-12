@@ -366,7 +366,8 @@ let () =
                if delta_time >= tick_interval then begin
                  ignore (Tetris.tick g);
                  last_tick_p1 := now
-               end);
+               end;
+               ignore (Tetris.apply_bot_move g));
             render c
         | Game2P g ->
             (let left_game_over, right_game_over = Tetris2P.is_game_over g in
@@ -383,7 +384,8 @@ let () =
                if delta_time_p2 >= tick_interval then begin
                  ignore (Tetris2P.tick_right g);
                  last_tick_p2 := now
-               end);
+               end;
+               ignore (Tetris2P.apply_bot_move g));
             render c
         | _ -> ())
       Event.frame
