@@ -250,6 +250,34 @@ let add_garbage g n =
   done;
   if not (ok_place g.piece g) then g.game_over <- true
 
+let reset g =
+  (* Reset the score to 0 *)
+  g.score <- 0;
+
+  (* Reset the well to empty *)
+  for i = 0 to g.rows - 1 do
+    g.well.(i) <- Array.make g.cols "empty"
+  done;
+
+  (* Set the game over flag to false *)
+  g.game_over <- false;
+
+  (* Create a new piece and reset the held piece *)
+  let pt = random_piece_type () in
+  g.piece <- create_piece pt g.cols;
+
+  (* Clear any previously held piece *)
+  g.held <- None;
+
+  (* Clear and refill the future pieces queue *)
+  Queue.clear g.future_pieces;
+  for _ = 1 to 5 do
+    Queue.add (random_piece_type ()) g.future_pieces
+  done;
+
+  (* Reset the switched flag *)
+  g.switched <- false
+
 let apply_bot_move g =
   if !(g.bot_mode) && Unix.gettimeofday () -. g.last_bot_move > 0.05 then begin
     let held_piece =
