@@ -231,8 +231,6 @@ let hold g =
     g.switched <- true)
 
 let add_garbage g n =
-  print_endline ("adding " ^ string_of_int n ^ " garbage");
-  try begin (* TODO: remove *)
   if n = 0 then ()
   else
     for i = 0 to min (n - 1) (g.rows - 1) do
@@ -251,9 +249,6 @@ let add_garbage g n =
     i := !i - 1
   done;
   if not (ok_place g.piece g) then g.game_over <- true
-  end with
-  | Invalid_argument _ ->
-      print_endline "uh oh"
 
 let apply_bot_move g =
   if !(g.bot_mode) && Unix.gettimeofday () -. g.last_bot_move > 0.05 then begin
