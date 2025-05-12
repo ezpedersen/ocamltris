@@ -1,4 +1,6 @@
-- 2 player gui
+- Implement ways to toggle AI on and off in the game/GUI (right now its by default always on)
+- Fix add garbage crashing
+- Remove fixed seed
 - Implement proper score and line tracking
 - Implement levels (certain amount of lines -> level up -> faster falling shit)
 - Implement next pieces preview (game already tracks next pieces, just need to display in gui)
