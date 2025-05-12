@@ -29,45 +29,62 @@ let render game =
     print_newline ()
   done
 
-let rec input_loop game =
-  let after =
-   fun () ->
-    render game;
-    input_loop game
-  in
-  Lwt_io.read_char Lwt_io.stdin >>= function
-  | 'q' -> Lwt.fail Exit
-  | 'h' ->
-      Tetris.shift game (-1);
-      after ()
-  | 'l' ->
-      Tetris.shift game 1;
-      after ()
-  | 'a' ->
-      Tetris.rotate_ccw game;
-      after ()
-  | 'd' ->
-      Tetris.rotate_cw game;
-      after ()
-  | 's' ->
-      Tetris.hold game;
-      after ()
-  | 'k' ->
-      Tetris.rotate_cw game;
-      after ()
-  | 'j' ->
-      Tetris.tick game |> ignore;
-      after ()
-  | ' ' ->
-      Tetris.hard_drop game;
-      after ()
-  | _ -> after ()
+let game_over_msg () =
+  print_endline "Game Over! Press 'q' to quit or 'r' to restart."
 
 let rec render_loop game =
-  Lwt_unix.sleep 1.0 >>= fun () ->
-  Tetris.tick game |> ignore;
-  render game;
-  render_loop game
+  if Tetris.is_game_over game then (
+    for x = 0 to 50 do
+      print_newline ()
+    done;
+    game_over_msg ();
+    Lwt.return_unit)
+  else
+    Lwt_unix.sleep 1.0 >>= fun () ->
+    ignore (Tetris.tick game);
+    render game;
+    render_loop game
+
+let rec input_loop game =
+  Lwt_io.read_char Lwt_io.stdin >>= fun c ->
+  let is_over = Tetris.is_game_over game in
+  match c with
+  | 'q' -> Lwt.fail Exit
+  | 'r' when is_over ->
+      Tetris.reset game;
+      print_endline "Game restarted!";
+      render game;
+      Lwt.join [ render_loop game; input_loop game ]
+  | _ when is_over -> input_loop game
+  | 'h' ->
+      Tetris.shift game (-1);
+      render game;
+      input_loop game
+  | 'l' ->
+      Tetris.shift game 1;
+      render game;
+      input_loop game
+  | 'a' ->
+      Tetris.rotate_ccw game;
+      render game;
+      input_loop game
+  | 'd' | 'k' ->
+      Tetris.rotate_cw game;
+      render game;
+      input_loop game
+  | 's' ->
+      Tetris.hold game;
+      render game;
+      input_loop game
+  | 'j' ->
+      ignore (Tetris.tick game);
+      render game;
+      input_loop game
+  | ' ' ->
+      Tetris.hard_drop game;
+      render game;
+      input_loop game
+  | _ -> input_loop game
 
 let () =
   let original_termios = Unix.tcgetattr Unix.stdin in
@@ -76,9 +93,8 @@ let () =
   let game = Tetris.create (10, 20) in
   Lwt_main.run
     (Lwt.catch
-       (fun () -> Lwt.pick [ render_loop game; input_loop game ])
-       (function
-         | exn ->
+       (fun () -> Lwt.join [ render_loop game; input_loop game ])
+       (fun exn ->
          disable_raw_mode original_termios;
          print_endline (Printexc.to_string exn);
          Lwt.return_unit))

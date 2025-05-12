@@ -1,7 +1,8 @@
 include Geometry
 
 type t = {
-  score : int ref;
+  mutable score : int;
+  mutable lines : int;
   well : string array array;
   rows : int;
   cols : int;
@@ -56,9 +57,10 @@ let clear_lines g =
   for x = 0 to List.length new_rows - 1 do
     g.well.(x + num_cleared) <- List.nth new_rows x
   done;
-  g.score := !(g.score) + (num_cleared * num_cleared)
+  g.score <- g.score + (num_cleared * num_cleared);
+  g.lines <- g.lines + num_cleared
 
-let get_score g = !(g.score)
+let get_score g = g.score
 
 let get_held g =
   match g.held with
@@ -203,7 +205,8 @@ let create (cols, rows) =
   done;
   let game =
     {
-      score = ref 0;
+      score = 0;
+      lines = 0;
       well;
       cols;
       rows;
@@ -233,18 +236,18 @@ let hold g =
 let add_garbage g n =
   if n = 0 then ()
   else
-    for i = 0 to n - 1 do
+    for i = 0 to min (n - 1) (g.rows - 1) do
       if Array.exists (fun x -> x <> "empty") g.well.(i) then
         g.game_over <- true
     done;
   for i = n to g.rows - 1 do
     g.well.(i - n) <- g.well.(i)
   done;
-  for i = g.rows - n to g.rows - 1 do
+  for i = max 0 (g.rows - n) to g.rows - 1 do
     g.well.(i) <- get_garbage_row g ()
   done;
   let i = ref n in
-  while !i >= 0 && not (ok_place g.piece g) do
+  while !i > 0 && not (ok_place g.piece g) do
     g.piece <- next_pos g.piece 0. (-1.);
     i := !i - 1
   done;
@@ -257,6 +260,34 @@ let get_cooldown difficulty =
   | 2 -> 0.1
   | 3 -> 0.05
   | _ -> 0.
+
+let reset g =
+  (* Reset the score to 0 *)
+  g.score <- 0;
+
+  (* Reset the well to empty *)
+  for i = 0 to g.rows - 1 do
+    g.well.(i) <- Array.make g.cols "empty"
+  done;
+
+  (* Set the game over flag to false *)
+  g.game_over <- false;
+
+  (* Create a new piece and reset the held piece *)
+  let pt = random_piece_type () in
+  g.piece <- create_piece pt g.cols;
+
+  (* Clear any previously held piece *)
+  g.held <- None;
+
+  (* Clear and refill the future pieces queue *)
+  Queue.clear g.future_pieces;
+  for _ = 1 to 5 do
+    Queue.add (random_piece_type ()) g.future_pieces
+  done;
+
+  (* Reset the switched flag *)
+  g.switched <- false
 
 let apply_bot_move g =
   if
@@ -280,3 +311,5 @@ let apply_bot_move g =
     true
   end
   else false
+
+let get_lines_cleared g = g.lines

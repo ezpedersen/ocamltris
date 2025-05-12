@@ -19,6 +19,8 @@ val rotate_cw : t -> unit
 
 (** returns score *)
 val get_score : t -> int
+(** returns the number of lines cleared *)
+val get_lines_cleared : t -> int
 (** returns held piece as string *)
 val get_held : t -> string
 (** holds a piece *)
@@ -27,7 +29,8 @@ val hold : t -> unit
 val is_game_over : t -> bool
 (** adds a [n] lines of garbage to the bottom of the board *)
 val add_garbage : t -> int -> unit
-
-val apply_bot_move : t -> bool
+(** clears the board and resets the score *)
+val reset : t -> unit
 (**Applies the AI bot to move once on the given gameboard if enabled. 
   Returns a boolean on whether or not the move applied.*)
+val apply_bot_move : t -> bool
