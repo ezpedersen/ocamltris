@@ -1,7 +1,8 @@
 include Geometry
 
 type t = {
-  score : int ref;
+  mutable score : int;
+  mutable lines : int;
   well : string array array;
   rows : int;
   cols : int;
@@ -54,9 +55,10 @@ let clear_lines g =
   for x = 0 to List.length new_rows - 1 do
     g.well.(x + num_cleared) <- List.nth new_rows x
   done;
-  g.score := !(g.score) + (num_cleared * num_cleared)
+  g.score <- g.score + (num_cleared * num_cleared);
+  g.lines <- g.lines + num_cleared
 
-let get_score g = !(g.score)
+let get_score g = g.score
 
 let get_held g =
   match g.held with
@@ -201,7 +203,8 @@ let create (cols, rows) =
   done;
   let game =
     {
-      score = ref 0;
+      score = 0;
+      lines = 0;
       well;
       cols;
       rows;
@@ -228,24 +231,29 @@ let hold g =
     g.switched <- true)
 
 let add_garbage g n =
+  print_endline ("adding " ^ string_of_int n ^ " garbage");
+  try begin (* TODO: remove *)
   if n = 0 then ()
   else
-    for i = 0 to n - 1 do
+    for i = 0 to min (n - 1) (g.rows - 1) do
       if Array.exists (fun x -> x <> "empty") g.well.(i) then
         g.game_over <- true
     done;
   for i = n to g.rows - 1 do
     g.well.(i - n) <- g.well.(i)
   done;
-  for i = g.rows - n to g.rows - 1 do
+  for i = max 0 (g.rows - n) to g.rows - 1 do
     g.well.(i) <- get_garbage_row g ()
   done;
   let i = ref n in
-  while !i >= 0 && not (ok_place g.piece g) do
+  while !i > 0 && not (ok_place g.piece g) do
     g.piece <- next_pos g.piece 0. (-1.);
     i := !i - 1
   done;
   if not (ok_place g.piece g) then g.game_over <- true
+  end with
+  | Invalid_argument _ ->
+      print_endline "uh oh"
 
 let apply_bot_move g =
   if !(g.bot_mode) && Unix.gettimeofday () -. g.last_bot_move > 0.05 then begin
@@ -266,3 +274,5 @@ let apply_bot_move g =
     true
   end
   else false
+
+let get_lines_cleared g = g.lines

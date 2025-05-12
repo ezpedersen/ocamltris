@@ -19,6 +19,8 @@ val rotate_cw : t -> unit
 
 (** returns score *)
 val get_score : t -> int
+(** returns the number of lines cleared *)
+val get_lines_cleared : t -> int
 (** returns held piece as string *)
 val get_held : t -> string
 (** holds a piece *)
