@@ -29,9 +29,15 @@ let render_title_screen c =
   Canvas.fillRect c ~pos:(0.0, 0.0) ~size:(window_width, window_height);
   Canvas.setFillColor c Color.white;
   Canvas.fillText c "2-Player Ocamltris" (center_x -. 150.0, 100.0);
-  Canvas.fillText c "Press 1 to play singleplayer." (center_x -. 150.0, 150.0);
-  Canvas.fillText c "Press 2 to play multiplayer." (center_x -. 150.0, 200.0);
-  Canvas.fillText c "Press F1 for controls" (center_x -. 150.0, 250.0);
+  Canvas.fillText c "Press 0 to play singleplayer." (center_x -. 400.0, 150.0);
+  Canvas.fillText c
+    "Press 1-4 to play against a bot (difficulty 1-4 respectively)."
+    (center_x -. 400.0, 200.0);
+  Canvas.fillText c "Press 5 to play local multiplayer."
+    (center_x -. 400.0, 250.0);
+  Canvas.fillText c "Press 6 to watch the max difficulty bot play by itself!"
+    (center_x -. 400.0, 300.0);
+  Canvas.fillText c "Press F1 for controls" (center_x -. 400.0, 350.0);
   Canvas.show c
 
 let render_controls c =
@@ -45,7 +51,7 @@ let render_controls c =
 
   Canvas.fillText c "Player 1:" (150., 140.);
   Canvas.fillText c "A/D: Move Left/Right" (150., 180.);
-  Canvas.fillText c "W/S: Rotate CCW/CW" (150., 220.);
+  Canvas.fillText c "W/S: Rotate CW/CCW" (150., 220.);
   Canvas.fillText c "Z: Soft Drop" (150., 260.);
   Canvas.fillText c "X: Hard Drop" (150., 300.);
   Canvas.fillText c "C: Hold" (150., 340.);
@@ -53,7 +59,7 @@ let render_controls c =
   Canvas.fillText c "Player 2:" ((float_of_int cols *. cell_size) +. 350., 140.);
   Canvas.fillText c "J/L: Move Left/Right"
     ((float_of_int cols *. cell_size) +. 350., 180.);
-  Canvas.fillText c "I/K: Rotate CCW/CW"
+  Canvas.fillText c "I/K: Rotate CW/CCW"
     ((float_of_int cols *. cell_size) +. 350., 220.);
   Canvas.fillText c "M: Soft Drop"
     ((float_of_int cols *. cell_size) +. 350., 260.);
@@ -200,7 +206,7 @@ let render c =
       render_game c g;
       Canvas.setFillColor c Color.red;
       Canvas.fillText c "Game Over!" (float_of_int cols *. cell_size /. 2., 100.);
-      Canvas.fillText c "Press R to restart"
+      Canvas.fillText c "Press R to go back to the title screen"
         (float_of_int cols *. cell_size /. 2., 150.)
   | Pause g ->
       render_game c g;
@@ -223,7 +229,7 @@ let render c =
       else if right_game_over then
         Canvas.fillText c "Player 1 >>> Player 2!"
           ((float_of_int cols *. cell_size) +. 100., 50.);
-      Canvas.fillText c "Press R to restart"
+      Canvas.fillText c "Press R to go back to the title screen"
         ((float_of_int cols *. cell_size) +. 100., 90.)
   | Pause2P g ->
       render_multiplayer_game c g;
@@ -262,8 +268,8 @@ let () =
               | Event.KeyQ -> Backend.stop ()
               | Event.KeyA -> Tetris.shift g (-1)
               | Event.KeyD -> Tetris.shift g 1
-              | Event.KeyW -> Tetris.rotate_ccw g
-              | Event.KeyS -> Tetris.rotate_cw g
+              | Event.KeyW -> Tetris.rotate_cw g
+              | Event.KeyS -> Tetris.rotate_ccw g
               | Event.KeyC -> Tetris.hold g
               | Event.KeyZ ->
                   ignore (Tetris.tick g);
@@ -275,7 +281,7 @@ let () =
             render c
         | Title -> (
             match key with
-            | Event.Key1Exclamation ->
+            | Event.Key0RParenthesis ->
                 let game = Tetris.create (cols, rows) false 0 in
                 current_state := Game game;
                 last_tick_p1 := Unix.gettimeofday ();
@@ -283,11 +289,40 @@ let () =
             | Event.KeyF1 ->
                 current_state := Controls;
                 render c
-            | Event.Key2At ->
-                let game = Tetris2P.create (cols, rows) in
+            | Event.Key1Exclamation ->
+                let game = Tetris2P.create (cols, rows) true 1 in
                 current_state := Game2P game;
                 last_tick_p1 := Unix.gettimeofday ();
                 last_tick_p2 := Unix.gettimeofday ();
+                render c
+            | Event.Key2At ->
+                let game = Tetris2P.create (cols, rows) true 2 in
+                current_state := Game2P game;
+                last_tick_p1 := Unix.gettimeofday ();
+                last_tick_p2 := Unix.gettimeofday ();
+                render c
+            | Event.Key3Number ->
+                let game = Tetris2P.create (cols, rows) true 3 in
+                current_state := Game2P game;
+                last_tick_p1 := Unix.gettimeofday ();
+                last_tick_p2 := Unix.gettimeofday ();
+                render c
+            | Event.Key4Dollar ->
+                let game = Tetris2P.create (cols, rows) true 4 in
+                current_state := Game2P game;
+                last_tick_p1 := Unix.gettimeofday ();
+                last_tick_p2 := Unix.gettimeofday ();
+                render c
+            | Event.Key5Percent ->
+                let game = Tetris2P.create (cols, rows) false 0 in
+                current_state := Game2P game;
+                last_tick_p1 := Unix.gettimeofday ();
+                last_tick_p2 := Unix.gettimeofday ();
+                render c
+            | Event.Key6Caret ->
+                let game = Tetris.create (cols, rows) true 4 in
+                current_state := Game game;
+                last_tick_p1 := Unix.gettimeofday ();
                 render c
             | _ -> ())
         | Pause g -> (
@@ -300,9 +335,7 @@ let () =
         | GameOver g -> (
             match key with
             | Event.KeyR ->
-                let game = Tetris.create (cols, rows) false 0 in
-                current_state := Game game;
-                last_tick_p1 := Unix.gettimeofday ();
+                current_state := Title;
                 render c
             | _ -> ())
         | Game2P g ->
@@ -311,8 +344,8 @@ let () =
               | Event.KeyQ -> Backend.stop ()
               | Event.KeyA -> Tetris2P.shift_left g (-1)
               | Event.KeyD -> Tetris2P.shift_left g 1
-              | Event.KeyW -> Tetris2P.rotate_ccw_left g
-              | Event.KeyS -> Tetris2P.rotate_cw_left g
+              | Event.KeyW -> Tetris2P.rotate_cw_left g
+              | Event.KeyS -> Tetris2P.rotate_ccw_left g
               | Event.KeyC -> Tetris2P.hold_left g
               | Event.KeyZ ->
                   ignore (Tetris2P.tick_left g);
@@ -321,8 +354,8 @@ let () =
               | Event.KeyP -> current_state := Pause2P g
               | Event.KeyJ -> Tetris2P.shift_right g (-1)
               | Event.KeyL -> Tetris2P.shift_right g 1
-              | Event.KeyI -> Tetris2P.rotate_ccw_right g
-              | Event.KeyK -> Tetris2P.rotate_cw_right g
+              | Event.KeyI -> Tetris2P.rotate_cw_right g
+              | Event.KeyK -> Tetris2P.rotate_ccw_right g
               | Event.KeyPeriodGreater -> Tetris2P.hold_right g
               | Event.KeyM ->
                   ignore (Tetris2P.tick_right g);
@@ -342,10 +375,7 @@ let () =
         | GameOver2P g -> (
             match key with
             | Event.KeyR ->
-                let game = Tetris2P.create (cols, rows) in
-                current_state := Game2P game;
-                last_tick_p1 := Unix.gettimeofday ();
-                last_tick_p2 := Unix.gettimeofday ();
+                current_state := Title;
                 render c
             | _ -> ())
         | Controls ->

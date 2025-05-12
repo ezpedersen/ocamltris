@@ -5,9 +5,9 @@ type t = {
   mutable right_garbaged_lines : int;
 }
 
-let create (cols, rows) =
+let create (cols, rows) bot_enabled difficulty =
   let left = Tetris.create (cols, rows) false 0 in
-  let right = Tetris.create (cols, rows) true 4 in
+  let right = Tetris.create (cols, rows) bot_enabled difficulty in
   { left; right; left_garbaged_lines = 0; right_garbaged_lines = 0 }
 
 let add_garbage g =

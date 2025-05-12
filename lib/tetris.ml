@@ -296,8 +296,12 @@ let apply_bot_move g =
   then begin
     let held_piece =
       match g.held with
-      | None -> create_piece O g.cols
-      | Some piece_type -> create_piece piece_type g.cols
+      | None ->
+          let made_piece = create_piece O g.cols in
+          { made_piece with position = { made_piece.position with fy = 3. } }
+      | Some piece_type ->
+          let made_piece = create_piece piece_type g.cols in
+          { made_piece with position = { made_piece.position with fy = 3. } }
     in
     let move = Bot.get_next_move g.well g.piece held_piece in
     (match move with

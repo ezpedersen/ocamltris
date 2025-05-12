@@ -1,7 +1,7 @@
 type t
 (** a 2-Player tetris game *)
 
-val create : int * int -> t
+val create : int * int -> bool -> int -> t
 (** creates a 2 player tetris game on [x] by [y] boards *)
 
 val tick_left : t -> unit
