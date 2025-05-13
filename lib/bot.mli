@@ -19,3 +19,6 @@ val get_next_move : string array array -> piece -> piece -> move
 val get_next_move_sequence : string array array -> piece -> piece -> move list
 (** Gets the sequence of optimal moves for a given piece, from start to hard
     dropping. *)
+
+val evaluate_state : string array array -> bool -> float
+(** Added for testing purposes *)
