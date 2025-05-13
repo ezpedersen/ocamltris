@@ -36,3 +36,10 @@ val reset : t -> unit
 (**Applies the AI bot to move once on the given gameboard if enabled. 
   Returns a boolean on whether or not the move applied.*)
 val apply_bot_move : t -> bool
+
+(** Added for testing purposes *)
+val get_piece_position : t -> float * float
+(** Added for testing purposes *)
+val get_piece_rotation : t -> int
+(** Added for testing purposes *)
+val get_well : t -> string array array

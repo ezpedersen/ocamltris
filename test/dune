@@ -1,2 +1,7 @@
 (test
- (name test_tetris))
+ (name test_tetris)
+ (libraries tetris ounit2))
+
+(test
+ (name test_bot)
+ (libraries tetris ounit2))
