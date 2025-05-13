@@ -9,6 +9,7 @@ type t = {
   mutable held : piece_type option;
   mutable piece : piece;
   future_pieces : piece_type Queue.t;
+  mutable mixed_bag_count : int; (*0-6 for which step of the mixed bag*)
   mutable switched : bool;
   mutable game_over : bool;
   mutable bot_mode : bool ref;
@@ -28,6 +29,15 @@ let random_piece_type () =
   | 5 -> J
   | 6 -> T
   | _ -> failwith "unreachable"
+
+let shuffle array =
+  let n = Array.length array in
+  for i = n - 1 downto 1 do
+    let j = Random.int (i + 1) in
+    let temp = array.(i) in
+    array.(i) <- array.(j);
+    array.(j) <- temp
+  done
 
 (* [true] if a block can be placed in [g]'s well at [(x, y)] *)
 let space_open g (x, y) =
@@ -87,7 +97,14 @@ let add_to_well g =
     (piece_pos g.piece);
   let pt = Queue.take g.future_pieces in
   clear_lines g;
-  Queue.add (random_piece_type ()) g.future_pieces;
+  g.mixed_bag_count <- g.mixed_bag_count + 1;
+  if g.mixed_bag_count = 7 then (
+    g.mixed_bag_count <- 0;
+    let pieces = [| O; I; S; Z; L; J; T |] in
+    shuffle pieces;
+    for i = 0 to 6 do
+      Queue.add pieces.(i) g.future_pieces
+    done);
   g.piece <- create_piece pt g.cols;
   if not @@ ok_place g.piece g then g.game_over <- true
 
@@ -214,6 +231,7 @@ let create (cols, rows) bot_enabled difficulty =
       held = None;
       switched = false;
       future_pieces;
+      mixed_bag_count = 6;
       game_over = false;
       bot_mode = ref bot_enabled;
       last_bot_move = Unix.gettimeofday ();
