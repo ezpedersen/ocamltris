@@ -1,8 +1,11 @@
 type t
 (** a 2-Player tetris game *)
 
-val create : int * int -> bool -> int -> t
-(** creates a 2 player tetris game on [x] by [y] boards *)
+val create : int * int -> bool -> int -> bool -> int -> t
+(** [create x y bot_enabled_1 difficulty_1 bot_enabled_2 difficulty_2] creates 
+a 2 player game on [x] by [y] boards, where [bot_enabled_1] and [bot_enabled_2] 
+determine if boards 1 and 2 are player or bot controlled, respectively, and 
+[difficulty_1] and [difficulty_2] determine bot difficulty.*)
 
 val tick_left : t -> unit
 (** causes selected block to fall down one tile on left player's board*)

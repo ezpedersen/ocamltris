@@ -37,7 +37,9 @@ let render_title_screen c =
     (center_x -. 400.0, 250.0);
   Canvas.fillText c "Press 6 to watch the max difficulty bot play by itself!"
     (center_x -. 400.0, 300.0);
-  Canvas.fillText c "Press F1 for controls" (center_x -. 400.0, 350.0);
+  Canvas.fillText c "Press 7 to watch two max difficulty bots play each other."
+    (center_x -. 400.0, 350.0);
+  Canvas.fillText c "Press F1 for controls" (center_x -. 400.0, 400.0);
   Canvas.show c
 
 let render_controls c =
@@ -290,31 +292,31 @@ let () =
                 current_state := Controls;
                 render c
             | Event.Key1Exclamation ->
-                let game = Tetris2P.create (cols, rows) true 1 in
+                let game = Tetris2P.create (cols, rows) false 0 true 1 in
                 current_state := Game2P game;
                 last_tick_p1 := Unix.gettimeofday ();
                 last_tick_p2 := Unix.gettimeofday ();
                 render c
             | Event.Key2At ->
-                let game = Tetris2P.create (cols, rows) true 2 in
+                let game = Tetris2P.create (cols, rows) false 0 true 2 in
                 current_state := Game2P game;
                 last_tick_p1 := Unix.gettimeofday ();
                 last_tick_p2 := Unix.gettimeofday ();
                 render c
             | Event.Key3Number ->
-                let game = Tetris2P.create (cols, rows) true 3 in
+                let game = Tetris2P.create (cols, rows) false 0 true 3 in
                 current_state := Game2P game;
                 last_tick_p1 := Unix.gettimeofday ();
                 last_tick_p2 := Unix.gettimeofday ();
                 render c
             | Event.Key4Dollar ->
-                let game = Tetris2P.create (cols, rows) true 4 in
+                let game = Tetris2P.create (cols, rows) false 0 true 4 in
                 current_state := Game2P game;
                 last_tick_p1 := Unix.gettimeofday ();
                 last_tick_p2 := Unix.gettimeofday ();
                 render c
             | Event.Key5Percent ->
-                let game = Tetris2P.create (cols, rows) false 0 in
+                let game = Tetris2P.create (cols, rows) false 0 false 0 in
                 current_state := Game2P game;
                 last_tick_p1 := Unix.gettimeofday ();
                 last_tick_p2 := Unix.gettimeofday ();
@@ -323,6 +325,12 @@ let () =
                 let game = Tetris.create (cols, rows) true 4 in
                 current_state := Game game;
                 last_tick_p1 := Unix.gettimeofday ();
+                render c
+            | Event.Key7Ampersand ->
+                let game = Tetris2P.create (cols, rows) true 4 true 4 in
+                current_state := Game2P game;
+                last_tick_p1 := Unix.gettimeofday ();
+                last_tick_p2 := Unix.gettimeofday ();
                 render c
             | _ -> ())
         | Pause g -> (
