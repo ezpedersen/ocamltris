@@ -72,13 +72,8 @@ let main () =
   let bg = W.image ~w:800 ~h:600 background_image in
   let bg_room = L.resident bg in
 
-  let single =
-    make_button "Single Player" (fun () ->
-        open_new_window "Single Player" "TODO")
-  in
-  let multi =
-    make_button "2 Player" (fun () -> open_new_window "2 Player" "TODO")
-  in
+  let single = make_button "Single Player" (fun () -> Gui.singleplayer ()) in
+  let multi = make_button "2 Player" (fun () -> Gui.multiplayer ()) in
   let bots = make_button "Bots" (fun () -> open_new_window "Bots" "TODO") in
   let controls = make_button "Controls" (fun () -> controls_window ()) in
 
