@@ -56,6 +56,34 @@ let controls_window () =
   let board = Main.create [ win ] in
   Main.run board
 
+let bot_settings_window () =
+  let title = W.label ~size:32 "BOT SETTINGS" in
+  let title_layout = L.resident title in
+  L.sety title_layout 30;
+
+  let info1 =
+    text 20 "Press 1–4 to select bot difficulty to face off against"
+    |> L.resident
+  in
+  L.sety info1 80;
+
+  let info2 =
+    text 20 "Press 6 to watch the max difficulty bot play by itself!"
+    |> L.resident
+  in
+  L.sety info2 120;
+
+  let info3 =
+    text 20 "Press 7 to watch two max difficulty bots play each other."
+    |> L.resident
+  in
+  L.sety info3 150;
+
+  let layout = L.tower ~sep:20 [ title_layout; info1; info2 ] in
+  let win = Window.create layout in
+  let board = Main.create [ win ] in
+  Main.run board
+
 let open_new_window title content =
   let label = W.label content in
   let layout = L.resident label in
@@ -74,7 +102,7 @@ let main () =
 
   let single = make_button "Single Player" (fun () -> Gui.singleplayer ()) in
   let multi = make_button "2 Player" (fun () -> Gui.multiplayer ()) in
-  let bots = make_button "Bots" (fun () -> open_new_window "Bots" "TODO") in
+  let bots = make_button "Bots" (fun () -> bot_settings_window ()) in
   let controls = make_button "Controls" (fun () -> controls_window ()) in
 
   let buttons =

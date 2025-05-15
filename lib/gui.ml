@@ -8,6 +8,7 @@ type gui_state =
   | Game2P of Tetris2P.t
   | GameOver2P of Tetris2P.t
   | Pause2P of Tetris2P.t
+  | BotSettings
   | Controls
 
 let current_state = ref Title
@@ -40,6 +41,20 @@ let render_title_screen c =
   Canvas.fillText c "Press 7 to watch two max difficulty bots play each other."
     (center_x -. 400.0, 350.0);
   Canvas.fillText c "Press F1 for controls" (center_x -. 400.0, 400.0);
+  Canvas.show c
+
+let render_bot_settings c =
+  Canvas.setFillColor c Color.black;
+  Canvas.fillRect c ~pos:(0.0, 0.0) ~size:(window_width, window_height);
+  Canvas.setFillColor c Color.white;
+  Canvas.fillText c "2-Player Settings" (center_x -. 150.0, 100.0);
+  Canvas.fillText c
+    "Press 1-4 to play against a bot (difficulty 1-4 respectively)."
+    (center_x -. 400.0, 200.0);
+  Canvas.fillText c "Press 6 to watch the max difficulty bot play by itself!"
+    (center_x -. 400.0, 300.0);
+  Canvas.fillText c "Press 7 to watch two max difficulty bots play each other."
+    (center_x -. 400.0, 350.0);
   Canvas.show c
 
 let render_controls c =
@@ -204,6 +219,7 @@ let render c =
   match !current_state with
   | Game g -> render_game c g
   | Title -> render_title_screen c
+  | BotSettings -> render_bot_settings c
   | GameOver g ->
       render_game c g;
       Canvas.setFillColor c Color.red;
@@ -267,7 +283,9 @@ let run_gui () =
         | Game g ->
             let _ =
               match key with
-              | Event.KeyQ -> Backend.stop ()
+              | Event.KeyQ ->
+                  Backend.stop ();
+                  Canvas.close c
               | Event.KeyA -> Tetris.shift g (-1)
               | Event.KeyD -> Tetris.shift g 1
               | Event.KeyW -> Tetris.rotate_cw g
@@ -349,7 +367,9 @@ let run_gui () =
         | Game2P g ->
             let _ =
               match key with
-              | Event.KeyQ -> Backend.stop ()
+              | Event.KeyQ ->
+                  Backend.stop ();
+                  Canvas.close c
               | Event.KeyA -> Tetris2P.shift_left g (-1)
               | Event.KeyD -> Tetris2P.shift_left g 1
               | Event.KeyW -> Tetris2P.rotate_cw_left g
@@ -386,6 +406,9 @@ let run_gui () =
                 current_state := Title;
                 render c
             | _ -> ())
+        | BotSettings ->
+            current_state := BotSettings;
+            render c
         | Controls ->
             current_state := Title;
             render c)
@@ -437,6 +460,11 @@ let singleplayer () =
   run_gui ()
 
 let multiplayer () =
-  let game = Tetris2P.create (cols, rows) false 0 true 1 in
+  let game = Tetris2P.create (cols, rows) false 0 false 0 in
+  current_state := Game2P game;
+  run_gui ()
+
+let botplayer () =
+  let game = Tetris2P.create (cols, rows) false 0 false 0 in
   current_state := Game2P game;
   run_gui ()
