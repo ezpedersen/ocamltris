@@ -1,6 +1,6 @@
 (library
  (name tetris)
  (public_name tetris)
- (modules Tetris Tetris2P bot Geometry)
- (libraries lwt.unix)
+ (modules Tetris Tetris2P bot Geometry Gui)
+ (libraries lwt.unix ocaml-canvas)
  (wrapped false))

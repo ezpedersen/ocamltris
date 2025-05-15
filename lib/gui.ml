@@ -240,7 +240,7 @@ let render c =
       Canvas.fillText c "Press P to resume"
         ((float_of_int cols *. cell_size) +. 100., 250.)
 
-let () =
+let run_gui () =
   Backend.init ();
 
   let width = int_of_float (float_of_int cols *. cell_size) in
@@ -430,3 +430,13 @@ let () =
   Backend.run (fun () ->
       ignore stop_on_close;
       ignore controls)
+
+let singleplayer () =
+  let game = Tetris.create (cols, rows) false 0 in
+  current_state := Game game;
+  run_gui ()
+
+let multiplayer () =
+  let game = Tetris2P.create (cols, rows) false 0 true 1 in
+  current_state := Game2P game;
+  run_gui ()

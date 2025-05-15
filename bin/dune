@@ -1,5 +1,5 @@
 (executables
- (names gui term main)
+ (names term main)
  (libraries tetris unix lwt.unix ocaml-canvas bogue)
  (preprocess (pps lwt_ppx)))
 
