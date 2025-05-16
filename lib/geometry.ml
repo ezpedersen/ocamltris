@@ -34,16 +34,8 @@ let string_of_piece_type = function
   | L -> "L"
   | J -> "J"
   | T -> "T"
-
-let piece_type_of_string = function
-  | "O" -> O
-  | "I" -> I
-  | "S" -> S
-  | "Z" -> Z
-  | "L" -> L
-  | "J" -> J
-  | "T" -> T
-  | _ -> failwith "Invalid piece type"
+(* let piece_type_of_string = function | "O" -> O | "I" -> I | "S" -> S | "Z" ->
+   Z | "L" -> L | "J" -> J | "T" -> T | _ -> failwith "Invalid piece type" *)
 
 type piece = {
   piece_type : piece_type;

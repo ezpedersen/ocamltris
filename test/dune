@@ -5,3 +5,7 @@
 (test
  (name test_bot)
  (libraries tetris ounit2))
+
+(test
+ (name test_bisect)
+ (libraries tetris ounit2))
