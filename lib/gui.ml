@@ -476,4 +476,12 @@ let face_bot difficulty () =
   current_state := Game2P game;
   run_gui ()
 
-(* let bot_battle = *)
+let bot_dual () =
+  let game = Tetris2P.create (cols, rows) true 4 true 4 in
+  current_state := Game2P game;
+  run_gui ()
+
+let bot_solo () =
+  let game = Tetris.create (cols, rows) true 4 in
+  current_state := Game game;
+  run_gui ()

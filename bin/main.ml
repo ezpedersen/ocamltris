@@ -97,10 +97,10 @@ let bot_settings_window () =
     make_button "Face a Bot (Difficulty 4)" (fun () -> Gui.face_bot 4 ())
   in
   let watch_solo =
-    make_button "Watch One Bot Play Solo" (fun () -> Gui.multiplayer ()) (** TODO *)
+    make_button "Watch One Bot Play Solo" (fun () -> Gui.bot_solo ()) (** TODO *)
   in 
   let watch_dual = 
-    make_button "Watch Two Bots Dual" (fun () -> Gui.multiplayer ()) (** TODO *)
+    make_button "Watch Two Bots Dual" (fun () -> Gui.bot_dual ()) (** TODO *)
   in
 
   let buttons =
