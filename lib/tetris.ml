@@ -333,8 +333,6 @@ let apply_bot_move g =
     true
   end
   else false
+[@@coverage off]
 
 let get_lines_cleared g = g.lines
-let get_piece_position g = (g.piece.position.fx, g.piece.position.fy)
-let get_piece_rotation g = !(g.piece.rotation)
-let get_well g = g.well

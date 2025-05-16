@@ -145,24 +145,21 @@ let bumpiness column_heights =
 
 (** returns bumpiness of provided column heights with adjusted iteration *)
 let adjusted_bumpiness column_heights =
-  let sum = ref 0. in
+  if Array.length column_heights <= 1 then 0.0
+    (* Return 0 if there are no columns or just one column *)
+  else
+    let sum = ref 0. in
 
-  for i = 0 to Array.length column_heights - 3 do
-    sum :=
-      !sum
-      +. abs_float
-           (float_of_int column_heights.(i)
-           -. float_of_int column_heights.(i + 1))
-  done;
+    (* Iterate through all pairs of adjacent columns *)
+    for i = 0 to Array.length column_heights - 2 do
+      sum :=
+        !sum
+        +. abs_float
+             (float_of_int column_heights.(i)
+             -. float_of_int column_heights.(i + 1))
+    done;
 
-  sum :=
     !sum
-    +. abs_float
-         (float_of_int column_heights.(0) -. float_of_int column_heights.(1));
-  (*for i = 0 to Array.length column_heights - 2 do sum := !sum -. 0.4 *. min 3.
-    (float_of_int column_heights.(i) -. float_of_int
-    column_heights.(Array.length column_heights - 1)) done;*)
-  !sum
 
 (** evaluate the current game state *)
 let evaluate_state well aggressive_mode =
