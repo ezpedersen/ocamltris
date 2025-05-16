@@ -1,5 +1,6 @@
 include Geometry
 
+(** the various inputs that a bot can give *)
 type move =
   | ShiftLeft
   | ShiftRight
@@ -8,7 +9,7 @@ type move =
   | HardDrop
   | Hold
 
-(*Potential placement/move with piece*)
+(** potential placement/move with piece*)
 type placement = {
   position : float * float; (* x, y coordinates *)
   rotation : int; (* 0-3 for rotation state *)
@@ -16,6 +17,7 @@ type placement = {
   lines_cleared : int; (* Number of lines cleared *)
 }
 
+(** constant values dictating bot behavior *)
 type constants = {
   aggregate_height : float;
   complete_lines : float;
@@ -23,6 +25,7 @@ type constants = {
   bumpiness : float;
 }
 
+(** settings instances of the bot use *)
 let weights =
   {
     aggregate_height = -0.510066;
@@ -31,9 +34,11 @@ let weights =
     bumpiness = -0.184483;
   }
 
+(** gets the points of piece with [rotation_value] at location [(x, y)]*)
 let get_piece_points piece_type (rotation_value : int) (x, y) =
   piece_pos (make_piece piece_type (ref rotation_value) (fpoint x y))
 
+(** returns whether or not a piece can be placed in the given scenario *)
 let can_place_piece well piece_type rotation (pos_x, pos_y) aggressive_mode =
   let rows = Array.length well in
   let cols = if rows > 0 then Array.length well.(0) else 0 in
@@ -44,6 +49,7 @@ let can_place_piece well piece_type rotation (pos_x, pos_y) aggressive_mode =
       x >= 0 && x < right_side && y >= 0 && y < rows && well.(y).(x) = "empty")
     piece_points
 
+(** places piece into well at provided position *)
 let place_piece well piece_type rotation (pos_x, pos_y) =
   let new_well = Array.map Array.copy well in
   let piece_points = get_piece_points piece_type rotation (pos_x, pos_y) in
@@ -59,6 +65,7 @@ let place_piece well piece_type rotation (pos_x, pos_y) =
 
   new_well
 
+(** gets the heights of columns in a well *)
 let get_column_heights well =
   let rows = Array.length well in
   let cols = if rows > 0 then Array.length well.(0) else 0 in
@@ -75,8 +82,10 @@ let get_column_heights well =
 
   heights
 
+(** returns the sum of the provided column heights *)
 let aggregate_height column_heights = Array.fold_left ( + ) 0 column_heights
 
+(** counts the number of complete lines in provided well *)
 let count_complete_lines well =
   let rows = Array.length well in
   let cols = if rows > 0 then Array.length well.(0) else 0 in
@@ -92,6 +101,7 @@ let count_complete_lines well =
 
   !count
 
+(** returns the number of complete lines in well, with adjusted iteration*)
 let adjusted_complete_lines well =
   let rows = Array.length well in
   let cols = if rows > 0 then Array.length well.(0) else 0 in
@@ -107,6 +117,7 @@ let adjusted_complete_lines well =
 
   !count
 
+(** counts holes in given well *)
 let count_holes well =
   let rows = Array.length well in
   let cols = if rows > 0 then Array.length well.(0) else 0 in
@@ -122,6 +133,7 @@ let count_holes well =
 
   !count
 
+(** returns the bumpiness of the provided column heights*)
 let bumpiness column_heights =
   let sum = ref 0 in
 
@@ -131,26 +143,25 @@ let bumpiness column_heights =
 
   !sum
 
+(** returns bumpiness of provided column heights with adjusted iteration *)
 let adjusted_bumpiness column_heights =
-  let sum = ref 0. in
+  if Array.length column_heights <= 1 then 0.0
+    (* Return 0 if there are no columns or just one column *)
+  else
+    let sum = ref 0. in
 
-  for i = 0 to Array.length column_heights - 3 do
-    sum :=
-      !sum
-      +. abs_float
-           (float_of_int column_heights.(i)
-           -. float_of_int column_heights.(i + 1))
-  done;
+    (* Iterate through all pairs of adjacent columns *)
+    for i = 0 to Array.length column_heights - 2 do
+      sum :=
+        !sum
+        +. abs_float
+             (float_of_int column_heights.(i)
+             -. float_of_int column_heights.(i + 1))
+    done;
 
-  sum :=
     !sum
-    +. abs_float
-         (float_of_int column_heights.(0) -. float_of_int column_heights.(1));
-  (*for i = 0 to Array.length column_heights - 2 do sum := !sum -. 0.4 *. min 3.
-    (float_of_int column_heights.(i) -. float_of_int
-    column_heights.(Array.length column_heights - 1)) done;*)
-  !sum
 
+(** evaluate the current game state *)
 let evaluate_state well aggressive_mode =
   let column_heights = get_column_heights well in
   let agg_height = aggregate_height column_heights in
@@ -179,6 +190,7 @@ let evaluate_state well aggressive_mode =
    (weights.complete_lines *. float_of_int complete) +. (weights.holes *.
    float_of_int holes) +. (weights.bumpiness *. float_of_int bumps) *)
 
+(** drops the provided piece *)
 let drop_piece well piece_type rotation (x, y) =
   let rec drop y =
     if can_place_piece well piece_type rotation (x, y +. 1.) false then
@@ -187,6 +199,7 @@ let drop_piece well piece_type rotation (x, y) =
   in
   drop y
 
+(** finds all placements of the provided piece in the provided well *)
 let find_all_placements well piece =
   let column_heights = get_column_heights well in
   let aggressive_mode =
@@ -229,6 +242,7 @@ let find_all_placements well piece =
 
   !placements
 
+(** finds the best placement of the given piece in the given well *)
 let find_best_placement well piece =
   let placements = find_all_placements well piece in
 
@@ -247,6 +261,7 @@ let find_best_placement well piece =
       in
       Some (best, score, lines_cleared)
 
+(** returns whether the bot should hold the piece in the given scenario *)
 let should_hold well piece held_piece =
   if piece.piece_type = held_piece.piece_type then false
   else
@@ -258,6 +273,7 @@ let should_hold well piece held_piece =
         | Some (_, held_score, held_lines_cleared) ->
             if held_score > piece_score then true else false)
 
+(** returns a sequence of moves for the given piece *)
 let generate_move_sequence_with_piece (piece : piece) target =
   let moves = ref [] in
 
@@ -285,6 +301,7 @@ let generate_move_sequence_with_piece (piece : piece) target =
 
   List.rev !moves
 
+(** generates a move sequence for the given gamestate *)
 let generate_move_sequence well piece held_piece target held_target =
   if should_hold well piece held_piece then
     let moves = generate_move_sequence_with_piece held_piece held_target in
@@ -293,6 +310,7 @@ let generate_move_sequence well piece held_piece target held_target =
     let moves = generate_move_sequence_with_piece piece target in
     moves
 
+(** gets the next move in the provided gamestate *)
 let get_next_move well piece held_piece =
   match find_best_placement well piece with
   | None -> HardDrop
@@ -305,7 +323,8 @@ let get_next_move well piece held_piece =
           with
           | [] -> HardDrop
           | move :: tail -> move))
-
+          
+(** geets the next move sequence in the provided gamestate *)
 let get_next_move_sequence well piece held_piece =
   match find_best_placement well piece with
   | None -> [ HardDrop ]

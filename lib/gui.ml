@@ -1,3 +1,7 @@
+[@@@coverage exclude_file]
+(* GUI is moved to lib solely for the purpose of using it in main. It contains
+   mainly frontend code so doesn't make sense to test coverage with bisect. *)
+
 open OcamlCanvas.V1
 
 type gui_state =
