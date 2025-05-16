@@ -5,7 +5,23 @@ module L = Layout
 module T = Trigger
 
 let background_image = "static/bg.png"
+let background_wallpaper = "static/tetris_wallpaper.jpg"
+
+let window_open = ref false
+
 let text size str = W.label ~size ~fg:Draw.(opaque black) str
+
+let open_new_window title content =
+  let label = W.label content in
+  let layout = L.resident label in
+  let win = Window.create layout in
+  let board = Main.create [ win ] in
+  Main.run board
+
+let make_button label callback =
+  let b = W.button label in
+  W.on_click b ~click:(fun _ -> callback ());
+  b
 
 let controls_window () =
   let title = W.label ~size:32 "CONTROLS" in
@@ -57,44 +73,52 @@ let controls_window () =
   Main.run board
 
 let bot_settings_window () =
+  let bg = W.image ~w:1200 ~h:600 background_wallpaper in
+  let bg_room = L.resident bg in
+
   let title = W.label ~size:32 "BOT SETTINGS" in
-  let title_layout = L.resident title in
-  L.sety title_layout 30;
-
-  let info1 =
-    text 20 "Press 1–4 to select bot difficulty to face off against"
-    |> L.resident
+  let title_layout =
+    L.resident title |> fun l ->
+    L.sety l 30;
+    l
   in
-  L.sety info1 80;
 
-  let info2 =
-    text 20 "Press 6 to watch the max difficulty bot play by itself!"
-    |> L.resident
+  let bot_1 =
+    make_button "Face a Bot (Difficulty 1)" (fun () -> Gui.face_bot 1 ())
   in
-  L.sety info2 120;
-
-  let info3 =
-    text 20 "Press 7 to watch two max difficulty bots play each other."
-    |> L.resident
+  let bot_2 =
+    make_button "Face a Bot (Difficulty 2)" (fun () -> Gui.face_bot 2 ())
   in
-  L.sety info3 150;
+  let bot_3 =
+    make_button "Face a Bot (Difficulty 3)" (fun () -> Gui.face_bot 3 ())
+  in
+  let bot_4 =
+    make_button "Face a Bot (Difficulty 4)" (fun () -> Gui.face_bot 4 ())
+  in
+  let watch_solo =
+    make_button "Watch One Bot Play Solo" (fun () -> Gui.multiplayer ()) (** TODO *)
+  in 
+  let watch_dual = 
+    make_button "Watch Two Bots Dual" (fun () -> Gui.multiplayer ()) (** TODO *)
+  in
 
-  let layout = L.tower ~sep:20 [ title_layout; info1; info2 ] in
-  let win = Window.create layout in
-  let board = Main.create [ win ] in
+  let buttons =
+    L.flat ~align:Draw.Center ~sep:40
+      (List.map L.resident [ bot_1; bot_2; bot_3; bot_4; watch_solo; watch_dual ])
+  in
+  L.sety buttons 500;
+
+
+  let ui_layer =
+    L.superpose
+      [ title_layout
+      ; buttons
+      ]
+  in
+
+  let layout = L.superpose [ bg_room; ui_layer ] in
+  let board = Main.of_layout layout in
   Main.run board
-
-let open_new_window title content =
-  let label = W.label content in
-  let layout = L.resident label in
-  let win = Window.create layout in
-  let board = Main.create [ win ] in
-  Main.run board
-
-let make_button label callback =
-  let b = W.button label in
-  W.on_click b ~click:(fun _ -> callback ());
-  b
 
 let main () =
   let bg = W.image ~w:800 ~h:600 background_image in
