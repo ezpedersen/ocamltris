@@ -4,6 +4,7 @@ module W = Widget
 module L = Layout
 module T = Trigger
 
+let () = Random.self_init ()
 let background_image = "static/bg.png"
 let text size str = W.label ~size ~fg:Draw.(opaque black) str
 
