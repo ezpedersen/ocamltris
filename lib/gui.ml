@@ -1,3 +1,7 @@
+[@@@coverage exclude_file]
+(* GUI is moved to lib solely for the purpose of using it in main. It contains
+   mainly frontend code so doesn't make sense to test coverage with bisect. *)
+
 open OcamlCanvas.V1
 
 type gui_state =
@@ -24,6 +28,7 @@ let left_board_x = 100.0
 let right_board_x = board_width +. 200.0
 let board_y = 100.0
 let center_x = window_width /. 2.0
+let backend_init = ref false
 
 let render_title_screen c =
   Canvas.setFillColor c Color.black;
@@ -285,7 +290,7 @@ let run_gui () =
               match key with
               | Event.KeyQ ->
                   Backend.stop ();
-                  Canvas.close c
+                  exit 0
               | Event.KeyA -> Tetris.shift g (-1)
               | Event.KeyD -> Tetris.shift g 1
               | Event.KeyW -> Tetris.rotate_cw g
@@ -369,7 +374,7 @@ let run_gui () =
               match key with
               | Event.KeyQ ->
                   Backend.stop ();
-                  Canvas.close c
+                  exit 0
               | Event.KeyA -> Tetris2P.shift_left g (-1)
               | Event.KeyD -> Tetris2P.shift_left g 1
               | Event.KeyW -> Tetris2P.rotate_cw_left g
@@ -450,9 +455,11 @@ let run_gui () =
         | _ -> ())
       Event.frame
   in
-  Backend.run (fun () ->
-      ignore stop_on_close;
-      ignore controls)
+  if !backend_init then
+    Backend.run (fun () ->
+        ignore stop_on_close;
+        ignore controls)
+  else Backend.run (fun () -> ())
 
 let singleplayer () =
   let game = Tetris.create (cols, rows) false 0 in
@@ -464,7 +471,17 @@ let multiplayer () =
   current_state := Game2P game;
   run_gui ()
 
-let botplayer () =
-  let game = Tetris2P.create (cols, rows) false 0 false 0 in
+let face_bot difficulty () =
+  let game = Tetris2P.create (cols, rows) false 0 true difficulty in
   current_state := Game2P game;
+  run_gui ()
+
+let bot_dual () =
+  let game = Tetris2P.create (cols, rows) true 4 true 4 in
+  current_state := Game2P game;
+  run_gui ()
+
+let bot_solo () =
+  let game = Tetris.create (cols, rows) true 4 in
+  current_state := Game game;
   run_gui ()
