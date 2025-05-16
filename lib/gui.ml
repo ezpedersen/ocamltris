@@ -279,7 +279,13 @@ let run_gui () =
   let last_tick_p2 = ref (Unix.gettimeofday ()) in
   render_title_screen c;
   Canvas.show c;
-  let stop_on_close = React.E.map (fun _ -> Backend.stop ()) Event.close in
+  let stop_on_close =
+    React.E.map
+      (fun _ ->
+        Backend.stop ();
+        exit 0)
+      Event.close
+  in
 
   let controls =
     React.E.map
@@ -476,8 +482,8 @@ let face_bot difficulty () =
   current_state := Game2P game;
   run_gui ()
 
-let bot_dual () =
-  let game = Tetris2P.create (cols, rows) true 4 true 4 in
+let bot_dual d1 d2 () =
+  let game = Tetris2P.create (cols, rows) true d1 true d2 in
   current_state := Game2P game;
   run_gui ()
 

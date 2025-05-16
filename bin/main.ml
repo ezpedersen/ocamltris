@@ -7,9 +7,7 @@ module T = Trigger
 let () = Random.self_init ()
 let background_image = "static/bg.png"
 let background_wallpaper = "static/tetris_wallpaper.jpg"
-
 let window_open = ref false
-
 let text size str = W.label ~size ~fg:Draw.(opaque black) str
 
 let open_new_window title content =
@@ -73,6 +71,41 @@ let controls_window () =
   let board = Main.create [ win ] in
   Main.run board
 
+let bot_dual_settings_window () =
+  let bg = W.image ~w:800 ~h:600 background_wallpaper in
+  let bg_room = L.resident bg in
+
+  let title = W.label ~size:32 "BOT DUAL DIFFICULTIES" in
+  let title_node = L.resident title in
+  let () = L.sety title_node 30 in
+
+  let difficulties = [ 1; 2; 3; 4 ] in
+  let base_y = 450 in
+  let row_sep = 100 in
+
+  let row_nodes =
+    List.mapi
+      (fun row_idx x ->
+        let btns =
+          List.map
+            (fun y ->
+              make_button (Printf.sprintf "Difficulty %d vs %d" x y) (fun () ->
+                  Gui.bot_dual x y ())
+              |> L.resident)
+            difficulties
+        in
+        let row_layout = L.flat ~align:Draw.Center ~sep:40 btns in
+        let () = L.sety row_layout (base_y - (row_idx * row_sep)) in
+        row_layout)
+      difficulties
+  in
+  let grid_layer = L.superpose row_nodes in
+
+  let ui_layer = L.superpose [ title_node; grid_layer ] in
+  let full_layout = L.superpose [ bg_room; ui_layer ] in
+  let board = Main.of_layout full_layout in
+  Main.run board
+
 let bot_settings_window () =
   let bg = W.image ~w:1200 ~h:600 background_wallpaper in
   let bg_room = L.resident bg in
@@ -97,25 +130,20 @@ let bot_settings_window () =
     make_button "Face a Bot (Difficulty 4)" (fun () -> Gui.face_bot 4 ())
   in
   let watch_solo =
-    make_button "Watch One Bot Play Solo" (fun () -> Gui.bot_solo ()) (** TODO *)
-  in 
-  let watch_dual = 
-    make_button "Watch Two Bots Dual" (fun () -> Gui.bot_dual ()) (** TODO *)
+    make_button "Watch One Bot Play Solo" (fun () -> Gui.bot_solo ())
+  in
+  let watch_dual =
+    make_button "Watch Two Bots Dual" (fun () -> bot_dual_settings_window ())
   in
 
   let buttons =
     L.flat ~align:Draw.Center ~sep:40
-      (List.map L.resident [ bot_1; bot_2; bot_3; bot_4; watch_solo; watch_dual ])
+      (List.map L.resident
+         [ bot_1; bot_2; bot_3; bot_4; watch_solo; watch_dual ])
   in
   L.sety buttons 500;
 
-
-  let ui_layer =
-    L.superpose
-      [ title_layout
-      ; buttons
-      ]
-  in
+  let ui_layer = L.superpose [ title_layout; buttons ] in
 
   let layout = L.superpose [ bg_room; ui_layer ] in
   let board = Main.of_layout layout in
