@@ -503,8 +503,8 @@ let face_bot difficulty () =
   run_gui ()
 
 (** launches GUI in bot mode with two bots*)
-let bot_dual () =
-  let game = Tetris2P.create (cols, rows) true 4 true 4 in
+let bot_dual d1 d2 () =
+  let game = Tetris2P.create (cols, rows) true d1 true d2 in
   current_state := Game2P game;
   run_gui ()
 

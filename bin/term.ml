@@ -1,5 +1,21 @@
 open Lwt.Infix
 
+module TerminalConfig = struct
+  type t = {
+    enable_beep : bool;
+    disable_cursor : bool;
+  }
+
+  let default : t = { enable_beep = false; disable_cursor = true }
+  let load (_ : string) : (t, string) result = Ok default
+end
+
+let clear_screen () : unit =
+  (* ANSI escape to clear terminal *)
+  print_string "\027[2J";
+  print_string "\027[H";
+  flush stdout
+
 (* changes terminal to raw mode, make sure to disable after use *)
 let enable_raw_mode () =
   let open Unix in
@@ -44,6 +60,14 @@ let rec render_loop game =
     ignore (Tetris.tick game);
     render game;
     render_loop game
+
+let render_debug (game : Tetris.t) : unit =
+  (* Debug info with timestamp *)
+  let ts = Unix.gettimeofday () in
+  Printf.printf "[%.3f] Debug Render Start\n" ts;
+  render game;
+  Printf.printf "[%.3f] Debug Render End\n" ts;
+  flush stdout
 
 let rec input_loop game =
   Lwt_io.read_char Lwt_io.stdin >>= fun c ->

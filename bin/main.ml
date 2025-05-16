@@ -7,9 +7,30 @@ module T = Trigger
 let () = Random.self_init ()
 let background_image = "static/bg.png"
 let background_wallpaper = "static/tetris_wallpaper.jpg"
+let default_bg = "static/default.jpg"
 let window_open = ref false
 let text size str = W.label ~size ~fg:Draw.(opaque black) str
+let debug_enabled = ref false
 
+(** Debugging functionality *)
+let enable_debug () : unit =
+  debug_enabled := true;
+  Printf.printf "[DEBUG] Debug mode enabled\n";
+  flush stdout
+
+let disable_debug () : unit =
+  debug_enabled := false;
+  Printf.printf "[DEBUG] Debug mode disabled\n";
+  flush stdout
+
+let time_it name f x =
+  let t0 = Unix.gettimeofday () in
+  let res = f x in
+  let t1 = Unix.gettimeofday () in
+  Printf.printf "%s took %.4f seconds" name (t1 -. t0);
+  res
+
+(** GUI maker functions *)
 let open_new_window title content =
   let label = W.label content in
   let layout = L.resident label in

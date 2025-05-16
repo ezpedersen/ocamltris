@@ -1,5 +1,7 @@
 include Geometry
 
+let debug_enabled = ref false
+
 (** the various inputs that a bot can give *)
 type move =
   | ShiftLeft
@@ -9,21 +11,21 @@ type move =
   | HardDrop
   | Hold
 
-(** potential placement/move with piece*)
 type placement = {
   position : float * float; (* x, y coordinates *)
   rotation : int; (* 0-3 for rotation state *)
   score : float; (* Heuristic score *)
   lines_cleared : int; (* Number of lines cleared *)
 }
+(** potential placement/move with piece*)
 
-(** constant values dictating bot behavior *)
 type constants = {
   aggregate_height : float;
   complete_lines : float;
   holes : float;
   bumpiness : float;
 }
+(** constant values dictating bot behavior *)
 
 (** settings instances of the bot use *)
 let weights =
@@ -33,6 +35,12 @@ let weights =
     holes = -0.35663;
     bumpiness = -0.184483;
   }
+
+(** helper debugging functions *)
+let print_placement (p : placement) : unit =
+  let x, y = p.position in
+  Printf.printf "placement: pos=(%.1f,%.1f) rot=%d score=%.3f lines=%d" x y
+    p.rotation p.score p.lines_cleared
 
 (** gets the points of piece with [rotation_value] at location [(x, y)]*)
 let get_piece_points piece_type (rotation_value : int) (x, y) =
@@ -242,6 +250,16 @@ let find_all_placements well piece =
 
   !placements
 
+(** Debugging helper function *)
+let find_all_placements_debug well piece =
+  Printf.printf "find_all_placements: starting for piece %s"
+    (string_of_piece_type piece.piece_type);
+  let placements = find_all_placements well piece in
+  Printf.printf "find_all_placements: found %d placements"
+    (List.length placements);
+  List.iter print_placement placements;
+  placements
+
 (** finds the best placement of the given piece in the given well *)
 let find_best_placement well piece =
   let placements = find_all_placements well piece in
@@ -260,6 +278,16 @@ let find_best_placement well piece =
           placements
       in
       Some (best, score, lines_cleared)
+
+(** Debugging helper function *)
+let find_best_placement_debug well piece =
+  let result = find_best_placement well piece in
+  (match result with
+  | None -> Printf.printf "find_best_placement: no valid placements"
+  | Some (p, score, lines) ->
+      Printf.printf "find_best_placement: best score=%.3f lines=%d" score lines;
+      print_placement p);
+  result
 
 (** returns whether the bot should hold the piece in the given scenario *)
 let should_hold well piece held_piece =
@@ -323,7 +351,7 @@ let get_next_move well piece held_piece =
           with
           | [] -> HardDrop
           | move :: tail -> move))
-          
+
 (** geets the next move sequence in the provided gamestate *)
 let get_next_move_sequence well piece held_piece =
   match find_best_placement well piece with

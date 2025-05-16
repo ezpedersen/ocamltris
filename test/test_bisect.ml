@@ -3,7 +3,6 @@ open Bot
 open Geometry
 open OUnit2
 
-(** mock bot values for testing*)
 type constants = {
   aggregate_height : float;
   complete_lines : float;
@@ -11,7 +10,6 @@ type constants = {
   bumpiness : float;
 }
 
-(** placement definition for comparison *)
 type placement = {
   position : float * float; (* x, y coordinates *)
   rotation : int; (* 0-3 for rotation state *)
@@ -19,7 +17,6 @@ type placement = {
   lines_cleared : int; (* Number of lines cleared *)
 }
 
-(** bot weights *)
 let weights =
   {
     aggregate_height = -0.510066;
@@ -27,7 +24,6 @@ let weights =
     holes = -0.35663;
     bumpiness = -0.184483;
   }
-
 
 let test_cols_empty_well _ =
   let well = [||] in
