@@ -4,6 +4,7 @@
 
 open OcamlCanvas.V1
 
+(** the possible states the GUI can be in *)
 type gui_state =
   | Title
   | Game of Tetris.t
@@ -15,21 +16,33 @@ type gui_state =
   | BotSettings
   | Controls
 
+(** the current state of the gui*)
 let current_state = ref Title
+(** size of the cells on screen *)
 let cell_size = 30.
+(** the number of columns and rows in the game *)
 let cols = 10
 let rows = 20
+(** the time between ticks in seconds *)
 let tick_interval = 1.0
+(** the size of the game board in pixels *)
 let board_width = float_of_int cols *. cell_size
+(** the height of the game board in pixels *)
 let board_height = float_of_int rows *. cell_size
+(** the size of the window in pixels *)
 let window_width = (board_width *. 2.0) +. 400.0
+(** the height of the window in pixels *)
 let window_height = board_height +. 200.0
+(** the x position of the left board *)
 let left_board_x = 100.0
+(** the x position of the right board *)
 let right_board_x = board_width +. 200.0
+(** the y position of the board *)
 let board_y = 100.0
+(** the center point of the window *)
 let center_x = window_width /. 2.0
-let backend_init = ref false
 
+(** renders the title screen GUI *)
 let render_title_screen c =
   Canvas.setFillColor c Color.black;
   Canvas.fillRect c ~pos:(0.0, 0.0) ~size:(window_width, window_height);
@@ -48,6 +61,7 @@ let render_title_screen c =
   Canvas.fillText c "Press F1 for controls" (center_x -. 400.0, 400.0);
   Canvas.show c
 
+(** renders the bot settings GUI *)
 let render_bot_settings c =
   Canvas.setFillColor c Color.black;
   Canvas.fillRect c ~pos:(0.0, 0.0) ~size:(window_width, window_height);
@@ -62,6 +76,7 @@ let render_bot_settings c =
     (center_x -. 400.0, 350.0);
   Canvas.show c
 
+(** renders the controls GUI *)
 let render_controls c =
   Canvas.setFillColor c Color.black;
   Canvas.fillRect c ~pos:(0., 0.)
@@ -95,6 +110,7 @@ let render_controls c =
   Canvas.fillText c "Press any key to return"
     ((float_of_int cols *. cell_size) +. 100., 500.)
 
+(** renders the game GUI *)
 let render_game c game =
   Canvas.setFillColor c Color.black;
   Canvas.fillRect c ~pos:(0., 0.) ~size:(window_width, window_height);
@@ -134,6 +150,7 @@ let render_game c game =
     (Printf.sprintf "Held: %s" (Tetris.get_held game))
     ((float_of_int cols *. cell_size) +. 20., 60. +. 30.)
 
+(** renders the multiplayer game GUI*)
 let render_multiplayer_game c game =
   Canvas.setFillColor c Color.black;
   Canvas.fillRect c ~pos:(0., 0.)
@@ -220,6 +237,7 @@ let render_multiplayer_game c game =
     done
   done
 
+(** renders the GUI*)
 let render c =
   match !current_state with
   | Game g -> render_game c g
@@ -261,6 +279,7 @@ let render c =
       Canvas.fillText c "Press P to resume"
         ((float_of_int cols *. cell_size) +. 100., 250.)
 
+(** Runs the ocaml-canvas GUI, based on set current state*)
 let run_gui () =
   Backend.init ();
 
@@ -461,32 +480,35 @@ let run_gui () =
         | _ -> ())
       Event.frame
   in
-  if !backend_init then
     Backend.run (fun () ->
         ignore stop_on_close;
         ignore controls)
-  else Backend.run (fun () -> ())
 
+(** launches GUI in singleplayer mode*)
 let singleplayer () =
   let game = Tetris.create (cols, rows) false 0 in
   current_state := Game game;
   run_gui ()
 
+(** launches GUI in multiplayer mode*)
 let multiplayer () =
   let game = Tetris2P.create (cols, rows) false 0 false 0 in
   current_state := Game2P game;
   run_gui ()
 
+(** launches GUI in bot mode*)
 let face_bot difficulty () =
   let game = Tetris2P.create (cols, rows) false 0 true difficulty in
   current_state := Game2P game;
   run_gui ()
 
-let bot_dual d1 d2 () =
-  let game = Tetris2P.create (cols, rows) true d1 true d2 in
+(** launches GUI in bot mode with two bots*)
+let bot_dual () =
+  let game = Tetris2P.create (cols, rows) true 4 true 4 in
   current_state := Game2P game;
   run_gui ()
 
+(** launches GUI in bot mode with one bot*)
 let bot_solo () =
   let game = Tetris.create (cols, rows) true 4 in
   current_state := Game game;

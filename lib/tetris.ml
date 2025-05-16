@@ -18,6 +18,7 @@ type t = {
       (*0 to 4 for easy, medium, hard, expert, impossible*)
 }
 
+(** returns a random type of piece *)
 let random_piece_type () =
   let choice = Random.int 7 in
   match choice with
@@ -30,6 +31,7 @@ let random_piece_type () =
   | 6 -> T
   | _ -> failwith "unreachable"
 
+(** returns the array in a randomly shuffled order *)
 let shuffle array =
   let n = Array.length array in
   for i = n - 1 downto 1 do
@@ -52,6 +54,7 @@ let ok_place (p : piece) g =
       x >= 0 && x < g.cols && y >= 0 && y < g.rows && space_open g (x, y))
     (piece_pos p)
 
+(** clears all full lines from the board *)
 let clear_lines g =
   let row_full row = Array.for_all (fun x -> x <> "empty") row in
 
@@ -77,6 +80,7 @@ let get_held g =
   | Some x -> string_of_piece_type x
   | None -> "None"
 
+(** creates a piece with the provided piece type and columns *)
 let create_piece pt cols =
   {
     piece_type = pt;
@@ -108,6 +112,7 @@ let add_to_well g =
   g.piece <- create_piece pt g.cols;
   if not @@ ok_place g.piece g then g.game_over <- true
 
+(** [next_pos p x y] is a piece with the same qualities as [p], offset by [(x, y)]*)
 let next_pos p x y =
   { p with position = { fx = p.position.fx +. x; fy = p.position.fy +. y } }
 
@@ -116,6 +121,7 @@ let shift g n =
   let np = next_pos g.piece n 0. in
   if ok_place np g then g.piece <- np
 
+(** table for wall kicks to prevent out of bounds pieces for J, L, T, S, and Z pieces*)
 let wall_kicks_jltsz =
   let tbl = Hashtbl.create 8 in
   let add ft offsets = Hashtbl.add tbl ft offsets in
@@ -128,6 +134,8 @@ let wall_kicks_jltsz =
   add (3, 0) [ (0, 0); (-1, 0); (-1, -1); (0, 2); (-1, 2) ];
   add (0, 3) [ (0, 0); (1, 0); (1, 1); (0, -2); (1, -2) ];
   tbl
+
+(** table for wall kicks to prevent out of bounds pieces for I pieces*)
 
 let wall_kicks_i =
   let tbl = Hashtbl.create 8 in
@@ -166,6 +174,7 @@ let rotate g n =
 let rotate_ccw g = rotate g 1
 let rotate_cw g = rotate g (-1)
 
+(** calculates the shadow of the current piece *)
 let calculate_shadow g =
   let np = ref (next_pos g.piece 0. 1.) in
   let good = ref g.piece in
@@ -181,6 +190,7 @@ let hard_drop g =
 
 let is_game_over g = g.game_over
 
+(** creates a garbage row for the given board *)
 let get_garbage_row g () =
   let garbage_index = Random.int g.cols in
   let garbage_row =
@@ -271,6 +281,7 @@ let add_garbage g n =
   done;
   if not (ok_place g.piece g) then g.game_over <- true
 
+(** gets the bot move cooldown based on difficulty *)
 let get_cooldown difficulty =
   match difficulty with
   | 0 -> 0.4
@@ -279,32 +290,23 @@ let get_cooldown difficulty =
   | 3 -> 0.05
   | _ -> 0.
 
+
 let reset g =
-  (* Reset the score to 0 *)
   g.score <- 0;
 
-  (* Reset the well to empty *)
   for i = 0 to g.rows - 1 do
     g.well.(i) <- Array.make g.cols "empty"
   done;
 
-  (* Set the game over flag to false *)
   g.game_over <- false;
-
-  (* Create a new piece and reset the held piece *)
   let pt = random_piece_type () in
   g.piece <- create_piece pt g.cols;
-
-  (* Clear any previously held piece *)
   g.held <- None;
 
-  (* Clear and refill the future pieces queue *)
   Queue.clear g.future_pieces;
   for _ = 1 to 5 do
     Queue.add (random_piece_type ()) g.future_pieces
   done;
-
-  (* Reset the switched flag *)
   g.switched <- false
 
 let apply_bot_move g =
