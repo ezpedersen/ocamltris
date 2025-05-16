@@ -11,6 +11,5 @@ Sources Used:
     - Piece Positioning: <https://static.wikia.nocookie.net/tetrisconcept/images/3/3d/SRS-pieces.png/revision/latest?cb=20060626173148>; Accessed 3/22/25
     - Rotation Definition: <https://gamedev.stackexchange.com/questions/208367/how-is-rotation-defined-in-a-tetris-game>; Accessed 4/22/25
     - More Rotation Specifics: <https://tetris.fandom.com/wiki/SRS>; Accessed 4/22/25
-    - Landing page background (bg.png): "Prompt: Ocamltris Desert Camel" <https://sora.chatgpt.com/g/gen_01jtpz4n7xfvkv5t2xamsp2ybn>; Accessed 5/7/25
 
     - Tetris Bot Approach: https://codemyroad.wordpress.com/2013/04/14/tetris-ai-the-near-perfect-player/; Accessed 5/12/25
